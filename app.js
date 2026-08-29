@@ -7,6 +7,17 @@
    VIDSRC SERVERS REGISTRY
    ========================================================================= */
 const VIDSRC_SERVERS = [
+  { name: "VidLink (No Ads)", url: "https://vidlink.pro" },
+  { name: "AutoEmbed (Clean)", url: "https://player.autoembed.app/embed" },
+  { name: "4KHD (Fast)", url: "https://mapple.uk/watch" },
+  { name: "VidBinge", url: "https://vidbinge.com/embed" },
+  { name: "Main", url: "https://player.vidzee.wtf/embed" },
+  { name: "Fade", url: "https://rivestream.org/embed" },
+  { name: "Vidora", url: "https://anyembed.xyz/embed" },
+  { name: "Nero", url: "https://vidfast.pro" },
+  { name: "Astra", url: "https://vidsrc.su/embed" },
+  { name: "Vidplay", url: "https://vidsrc.cc/v2/embed" },
+  { name: "Flixify", url: "https://vidflix.club" },
   { name: "Azute", url: "https://vidrock.ru" },
   { name: "Yoru", url: "https://video.moviepire.co/embed" },
   { name: "4K", url: "https://player.videasy.net" },
@@ -27,15 +38,6 @@ const VIDSRC_SERVERS = [
   { name: "Vidind", url: "https://player.vidify.top/embed" },
   { name: "4K2", url: "https://www.vidking.net/embed" },
   { name: "Prime", url: "https://player.vidrush.net/embed" },
-  { name: "Main", url: "https://player.vidzee.wtf/embed" },
-  { name: "4KHD", url: "https://mapple.uk/watch" },
-  { name: "Vidora", url: "https://anyembed.xyz/embed" },
-  { name: "Fade", url: "https://rivestream.org/embed" },
-  { name: "Vidlink", url: "https://vidlink.pro" },
-  { name: "Nero", url: "https://vidfast.pro" },
-  { name: "Flixify", url: "https://vidflix.club" },
-  { name: "Astra", url: "https://vidsrc.su/embed" },
-  { name: "Vidplay", url: "https://vidsrc.cc/v2/embed" },
   { name: "Hindi", url: "https://vidsrc.wtf/api/1" },
   { name: "Vidsrc", url: "https://vidsrcme.ru/embed" },
   { name: "2embed", url: "https://www.2embed.stream/embed" },
@@ -43,7 +45,6 @@ const VIDSRC_SERVERS = [
   { name: "French", url: "https://frembed.asia/api" },
   { name: "Club", url: "https://moviesapi.to" },
   { name: "Sage", url: "https://111movies.com" },
-  { name: "Aura", url: "https://player.autoembed.app/embed" },
   { name: "Spanish", url: "https://play.modocine.com/play.php/embed" },
   { name: "Flix", url: "https://player.vidplus.to/embed" },
   { name: "Portuguese", url: "https://superflixapi.buzz" }
@@ -55,6 +56,9 @@ function buildStreamUrl(server, id, type = "movie") {
   const isTv = (type === "tv" || type === "series");
 
   if (isTv) {
+    if (s.includes("vidlink")) return `${base}/tv/${id}/1/1`;
+    if (s.includes("autoembed")) return `${base}/tv/${id}/1/1`;
+    if (s.includes("vidbinge")) return `${base}/tv/${id}/1/1`;
     if (s === "simplify") return `${base}/tv/${id}/1/1?autoplay=true&color=addc35&back=false&domainAd=braflix.win`;
     if (s === "hindi") return `${base}/tv/?id=${id}&s=1&e=1&poster=https://image.tmdb.org/t/p/w780/enNubozHn9pXi0ycTVYUWfpHZm.jpg&color=ffffff`;
     if (s === "4k2") return `${base}/tv/${id}/1/1`;
@@ -67,6 +71,9 @@ function buildStreamUrl(server, id, type = "movie") {
     if (s === "pass" || s === "portuguese") return `${base}/serie/${id}/1/1`;
     return `${base}/tv/${id}/1/1`;
   } else {
+    if (s.includes("vidlink")) return `${base}/movie/${id}`;
+    if (s.includes("autoembed")) return `${base}/movie/${id}`;
+    if (s.includes("vidbinge")) return `${base}/movie/${id}`;
     if (s === "simplify") return `${base}/movie/${id}?autoplay=true&color=addc35&back=false&domainAd=braflix.win`;
     if (s === "hindi") return `${base}/movie/?id=${id}&s=undefined&e=undefined&poster=https://image.tmdb.org/t/p/w780/enNubozHn9pXi0ycTVYUWfpHZm.jpg&color=ffffff`;
     if (s === "4k2") return `${base}/movie/${id}`;
@@ -130,11 +137,12 @@ let DICT = {
     popularMovies: "POPULAR MOVIES",
     popularSeries: "POPULAR SERIES",
     releases: "RELEASES",
-    adblockTag: "[ AD-BLOCKER DETECTED // SYSTEM NOTICE ]",
-    adblockTitle: "Please disable your AdBlocker for video playback",
-    adblockDesc: "Some video streaming servers (VidSrc & Kinobox) might fail to load if an AdBlocker is active. To ensure uninterrupted playback, please add this site to your AdBlock whitelist or pause your extension.",
-    adblockClose: "[ ✕ I UNDERSTAND / CLOSE ]",
-    adblockDontShow: "[ DON'T SHOW AGAIN ]"
+    adblockTag: "[ RECOMMENDATION // AD-BLOCKER ]",
+    adblockTitle: "Enable an AdBlocker for a Clean Experience",
+    adblockDesc: "Third-party video streaming servers may display intrusive popups and casino redirects. We strongly recommend installing uBlock Origin or using Brave Browser for uninterrupted, ad-free playback.",
+    adblockInstall: "[ GET UBLOCK ORIGIN ]",
+    adblockClose: "[ CONTINUE ]",
+    adblockDontShow: "[ DON'T REMIND AGAIN ]"
   },
   uk: {
     name: "УКРАЇНСЬКА",
@@ -169,11 +177,12 @@ let DICT = {
     popularMovies: "ПОПУЛЯРНІ ФІЛЬМИ",
     popularSeries: "ПОПУЛЯРНІ СЕРІАЛИ",
     releases: "РЕЛІЗІВ",
-    adblockTag: "[ ВИЯВЛЕНО AD-BLOCKER // СИСТЕМНЕ ПОВІДОМЛЕННЯ ]",
-    adblockTitle: "Будь ласка, вимкніть AdBlock для коректного відтворення",
-    adblockDesc: "Деякі відеоплеєри та балансери можуть не завантажуватися через активний блокувальник реклами (AdBlock/uBlock). Щоб відео запускалося без помилок, будь ласка, додайте сайт у винятки або тимчасово вимкніть розширення.",
-    adblockClose: "[ ✕ ЗРОЗУМІЛО / ЗАКРИТИ ]",
-    adblockDontShow: "[ БІЛЬШЕ НЕ ПОКАЗУВАТИ ]"
+    adblockTag: "[ РЕКОМЕНДАЦІЯ // АНТИРЕКЛАМА ]",
+    adblockTitle: "Увімкніть AdBlocker для чистого перегляду без реклами",
+    adblockDesc: "Сторонні стрімінг-сервери можуть показувати нав'язливу спливаючу рекламу та казино-редиректи при кліку на Play. Рекомендуємо встановити розширення uBlock Origin або використовувати браузер Brave для максимального захисту.",
+    adblockInstall: "[ ВСТАНОВИТИ UBLOCK ORIGIN ]",
+    adblockClose: "[ ПРОДОВЖИТИ ]",
+    adblockDontShow: "[ БІЛЬШЕ НЕ НАГАДУВАТИ ]"
   }
 };
 
@@ -1206,39 +1215,10 @@ async function loadSubtitles(id, type) {
   }
 }
 
-let isAdShieldActive = true;
-
-function toggleAdShield() {
-  isAdShieldActive = !isAdShieldActive;
-  const btn = document.getElementById("btnAdShield");
-  if (btn) {
-    if (isAdShieldActive) {
-      btn.innerText = "[ 🛡️ AD-SHIELD: ON ]";
-      btn.classList.remove("disabled");
-      btn.classList.add("active");
-    } else {
-      btn.innerText = "[ ⚠️ AD-SHIELD: OFF ]";
-      btn.classList.remove("active");
-      btn.classList.add("disabled");
-    }
-  }
-  const iframe = document.getElementById("videoIframe");
-  if (iframe && iframe.src) {
-    setIframe(iframe.src);
-  }
-}
-
 function setIframe(url) {
   const iframe = document.getElementById("videoIframe");
   if (!iframe) return;
-
-  if (isAdShieldActive) {
-    // Повністю блокує відкриття казино-попапів (window.open) та перенаправлення сайту (top navigation)
-    iframe.setAttribute("sandbox", "allow-scripts allow-same-origin allow-forms allow-presentation");
-  } else {
-    iframe.removeAttribute("sandbox");
-  }
-
+  iframe.removeAttribute("sandbox");
   iframe.src = url;
 }
 
@@ -1255,14 +1235,14 @@ try {
 } catch (e) {}
 
 /* =========================================================================
-   AD-BLOCKER DETECTOR MODULE
+   AD-BLOCKER RECOMMENDATION DETECTOR
    ========================================================================= */
 function detectAdBlock() {
-  const isIgnored = localStorage.getItem("fastfilm_adblock_ignore");
+  const isIgnored = localStorage.getItem("fastfilm_adblock_recommend_dismissed") || localStorage.getItem("fastfilm_adblock_ignore");
   if (isIgnored === "true") return;
 
   const bait = document.createElement("div");
-  bait.className = "ad-box pub_300x250 pub_300x250m pub_728x90 text-ad textAd text_ad text_ads text-ads text-ad-links";
+  bait.className = "ad-box pub_300x250 pub_300x250m pub_728x90 text-ad textAd text_ad text_ads text-ads text-ad-links banner-ad ad-banner";
   bait.style.cssText = "width: 1px !important; height: 1px !important; position: absolute !important; left: -10000px !important; top: -1000px !important;";
   document.body.appendChild(bait);
 
@@ -1281,19 +1261,35 @@ function detectAdBlock() {
 
     document.body.removeChild(bait);
 
-    if (isBlocked) {
+    // Якщо реклама НЕ блокується (тобто AdBlock НЕ увімкнено) — рекомендуємо користувачу встановити його
+    if (!isBlocked) {
       showAdblockModal();
     }
-  }, 350);
+  }, 400);
 }
 
 function showAdblockModal() {
+  const dict = DICT[currentLang] || DICT.en;
+  const tag = document.getElementById("labelAdblockTag");
+  if (tag) tag.innerText = dict.adblockTag || "[ RECOMMENDATION // AD-BLOCKER ]";
+  const title = document.getElementById("labelAdblockTitle");
+  if (title) title.innerText = dict.adblockTitle || "Enable an AdBlocker for a Clean Experience";
+  const desc = document.getElementById("labelAdblockDesc");
+  if (desc) desc.innerText = dict.adblockDesc || "Third-party video streaming servers may display intrusive popups and casino redirects...";
+  const btnInstall = document.getElementById("btnAdblockInstall");
+  if (btnInstall) btnInstall.innerText = dict.adblockInstall || "[ GET UBLOCK ORIGIN ]";
+  const btnClose = document.getElementById("btnAdblockClose");
+  if (btnClose) btnClose.innerText = dict.adblockClose || "[ CONTINUE ]";
+  const btnDont = document.getElementById("btnAdblockDontShow");
+  if (btnDont) btnDont.innerText = dict.adblockDontShow || "[ DON'T REMIND AGAIN ]";
+
   const modal = document.getElementById("adblockModal");
   if (modal) modal.style.display = "flex";
 }
 
 function closeAdblockModal(permanent = false) {
   if (permanent) {
+    localStorage.setItem("fastfilm_adblock_recommend_dismissed", "true");
     localStorage.setItem("fastfilm_adblock_ignore", "true");
   }
   const modal = document.getElementById("adblockModal");

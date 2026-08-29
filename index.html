@@ -23,7 +23,7 @@
       <div class="nav-left">
         <a href="#" class="logo" onclick="event.preventDefault(); navigateHome();">
           <span class="logo-box">FASTFILM</span>
-          <span>// 1.2</span>
+          <span>// 1.3</span>
         </a>
         <button id="btnBackToHome" class="btn-back" onclick="navigateHome()">[ ← BACK TO CATALOG ]</button>
       </div>
@@ -109,14 +109,13 @@
       <div class="player-column">
         <!-- 16:9 THEATER -->
         <div class="player-theater-box">
-          <iframe id="videoIframe" class="player-iframe" sandbox="allow-scripts allow-same-origin allow-forms allow-presentation" allow="autoplay; fullscreen; picture-in-picture; encrypted-media"></iframe>
+          <iframe id="videoIframe" class="player-iframe" allow="autoplay; fullscreen; picture-in-picture; encrypted-media"></iframe>
         </div>
 
         <!-- PROVIDER SELECTOR TABS -->
         <div class="provider-select-bar">
           <button id="tabVidSrc" class="prov-tab-btn active" onclick="switchProvider('vidsrc')">[ 01. VIDSRC ]</button>
           <button id="tabKinobox" class="prov-tab-btn" onclick="switchProvider('kinobox')">[ 02. KINOBOX ]</button>
-          <button id="btnAdShield" class="adshield-btn active" onclick="toggleAdShield()" title="Block Casino & Betting Popups/Redirects">[ 🛡️ AD-SHIELD: ON ]</button>
         </div>
 
         <!-- CONTROLS PANEL -->
@@ -173,20 +172,21 @@
     </div>
   </footer>
 
-  <!-- ADBLOCK DETECTOR MODAL -->
+  <!-- ADBLOCK RECOMMENDATION MODAL -->
   <div id="adblockModal" class="adblock-modal-overlay">
     <div class="adblock-modal-box">
       <div class="adblock-modal-header">
-        <span class="adblock-tag" id="labelAdblockTag">[ AD-BLOCKER DETECTED // SYSTEM NOTICE ]</span>
+        <span class="adblock-tag" id="labelAdblockTag">[ RECOMMENDATION // AD-BLOCKER ]</span>
         <button class="adblock-btn-secondary" onclick="closeAdblockModal(false)" style="padding: 2px 8px; font-size: 11px;">✕</button>
       </div>
-      <h3 class="adblock-modal-title" id="labelAdblockTitle">Please disable your AdBlocker for video playback</h3>
+      <h3 class="adblock-modal-title" id="labelAdblockTitle">Enable an AdBlocker for a Clean Experience</h3>
       <p class="adblock-modal-desc" id="labelAdblockDesc">
-        Some video streaming servers (VidSrc & Kinobox) might fail to load if an AdBlocker is active. To ensure uninterrupted playback, please add this site to your AdBlock whitelist or pause your extension.
+        Third-party video streaming servers may display intrusive popups and casino redirects. We strongly recommend installing uBlock Origin or using Brave Browser for uninterrupted, ad-free playback.
       </p>
       <div class="adblock-modal-actions">
-        <button class="adblock-btn-secondary" id="btnAdblockDontShow" onclick="closeAdblockModal(true)">[ DON'T SHOW AGAIN ]</button>
-        <button class="adblock-btn-primary" id="btnAdblockClose" onclick="closeAdblockModal(false)">[ ✕ I UNDERSTAND / CLOSE ]</button>
+        <button class="adblock-btn-primary" id="btnAdblockInstall" onclick="window.open('https://ublockorigin.com/', '_blank'); closeAdblockModal(false);">[ GET UBLOCK ORIGIN ]</button>
+        <button class="adblock-btn-secondary" id="btnAdblockClose" onclick="closeAdblockModal(false)">[ CONTINUE ]</button>
+        <button class="adblock-btn-secondary" id="btnAdblockDontShow" onclick="closeAdblockModal(true)">[ DON'T REMIND AGAIN ]</button>
       </div>
     </div>
   </div>

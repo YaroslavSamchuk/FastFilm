@@ -33,13 +33,14 @@ window.FASTFILM_LOCALES = {
     "recentlyWatched": "RECENTLY WATCHED",
     "clearHistory": "[ CLEAR HISTORY ]",
     "releases": "RELEASES",
-    "adblockTag": "[ AD-BLOCKER DETECTED // SYSTEM NOTICE ]",
-    "adblockTitle": "Please disable your AdBlocker for video playback",
-    "adblockDesc": "Some video streaming servers (VidSrc & Kinobox) might fail to load if an AdBlocker is active. To ensure uninterrupted playback, please add this site to your AdBlock whitelist or pause your extension.",
-    "adblockClose": "[ ✕ I UNDERSTAND / CLOSE ]",
-    "adblockDontShow": "[ DON'T SHOW AGAIN ]",
+    "adblockTag": "[ RECOMMENDATION // AD-BLOCKER ]",
+    "adblockTitle": "Enable an AdBlocker for a Clean Experience",
+    "adblockDesc": "Third-party video streaming servers may display intrusive popups and casino redirects. We strongly recommend installing uBlock Origin or using Brave Browser for uninterrupted, ad-free playback.",
+    "adblockClose": "[ CONTINUE ]",
+    "adblockDontShow": "[ DON'T REMIND AGAIN ]",
     "name": "ENGLISH",
-    "code": "en"
+    "code": "en",
+    "adblockInstall": "[ GET UBLOCK ORIGIN ]"
   },
   "uk": {
     "placeholder": "Пошук фільмів, серіалів, режисерів, аніме...",
@@ -74,13 +75,14 @@ window.FASTFILM_LOCALES = {
     "recentlyWatched": "НЕЩОДАВНО ПЕРЕГЛЯНУТІ",
     "clearHistory": "[ ОЧИСТИТИ ІСТОРІЮ ]",
     "releases": "РЕЛІЗІВ",
-    "adblockTag": "[ ВИЯВЛЕНО AD-BLOCKER // СИСТЕМНЕ ПОВІДОМЛЕННЯ ]",
-    "adblockTitle": "Будь ласка, вимкніть AdBlock для коректного відтворення",
-    "adblockDesc": "Деякі відеоплеєри та балансери можуть не завантажуватися через активний блокувальник реклами (AdBlock/uBlock). Щоб відео запускалося без помилок, будь ласка, додайте сайт у винятки або тимчасово вимкніть розширення.",
-    "adblockClose": "[ ✕ ЗРОЗУМІЛО / ЗАКРИТИ ]",
-    "adblockDontShow": "[ БІЛЬШЕ НЕ ПОКАЗУВАТИ ]",
+    "adblockTag": "[ РЕКОМЕНДАЦІЯ // АНТИРЕКЛАМА ]",
+    "adblockTitle": "Увімкніть AdBlocker для чистого перегляду без реклами",
+    "adblockDesc": "Сторонні стрімінг-сервери можуть показувати нав'язливу спливаючу рекламу та казино-редиректи при кліку на Play. Рекомендуємо встановити розширення uBlock Origin або використовувати браузер Brave для максимального захисту.",
+    "adblockClose": "[ ПРОДОВЖИТИ ]",
+    "adblockDontShow": "[ БІЛЬШЕ НЕ НАГАДУВАТИ ]",
     "name": "УКРАЇНСЬКА",
-    "code": "uk"
+    "code": "uk",
+    "adblockInstall": "[ ВСТАНОВИТИ UBLOCK ORIGIN ]"
   },
   "pl": {
     "placeholder": "Szukaj filmów, seriali, reżyserów, anime...",
@@ -121,7 +123,8 @@ window.FASTFILM_LOCALES = {
     "adblockClose": "[ ✕ I UNDERSTAND / CLOSE ]",
     "adblockDontShow": "[ DON'T SHOW AGAIN ]",
     "name": "POLSKI",
-    "code": "pl"
+    "code": "pl",
+    "adblockInstall": "[ GET UBLOCK ORIGIN ]"
   },
   "de": {
     "placeholder": "Filme, Serien, Regisseure, Anime suchen...",
@@ -162,7 +165,8 @@ window.FASTFILM_LOCALES = {
     "adblockClose": "[ ✕ I UNDERSTAND / CLOSE ]",
     "adblockDontShow": "[ DON'T SHOW AGAIN ]",
     "name": "DEUTSCH",
-    "code": "de"
+    "code": "de",
+    "adblockInstall": "[ GET UBLOCK ORIGIN ]"
   },
   "fr": {
     "placeholder": "Rechercher films, séries, réalisateurs, animés...",
@@ -203,7 +207,8 @@ window.FASTFILM_LOCALES = {
     "adblockClose": "[ ✕ I UNDERSTAND / CLOSE ]",
     "adblockDontShow": "[ DON'T SHOW AGAIN ]",
     "name": "FRANÇAIS",
-    "code": "fr"
+    "code": "fr",
+    "adblockInstall": "[ GET UBLOCK ORIGIN ]"
   },
   "es": {
     "placeholder": "Buscar películas, series, directores, anime...",
@@ -244,7 +249,8 @@ window.FASTFILM_LOCALES = {
     "adblockClose": "[ ✕ I UNDERSTAND / CLOSE ]",
     "adblockDontShow": "[ DON'T SHOW AGAIN ]",
     "name": "ESPAÑOL",
-    "code": "es"
+    "code": "es",
+    "adblockInstall": "[ GET UBLOCK ORIGIN ]"
   },
   "it": {
     "placeholder": "Cerca film, serie TV, registi, anime...",
@@ -285,7 +291,8 @@ window.FASTFILM_LOCALES = {
     "adblockClose": "[ ✕ I UNDERSTAND / CLOSE ]",
     "adblockDontShow": "[ DON'T SHOW AGAIN ]",
     "name": "ITALIANO",
-    "code": "it"
+    "code": "it",
+    "adblockInstall": "[ GET UBLOCK ORIGIN ]"
   },
   "pt": {
     "placeholder": "Pesquisar filmes, séries, diretores, anime...",
@@ -326,7 +333,8 @@ window.FASTFILM_LOCALES = {
     "adblockClose": "[ ✕ I UNDERSTAND / CLOSE ]",
     "adblockDontShow": "[ DON'T SHOW AGAIN ]",
     "name": "PORTUGUÊS",
-    "code": "pt"
+    "code": "pt",
+    "adblockInstall": "[ GET UBLOCK ORIGIN ]"
   },
   "tr": {
     "placeholder": "Film, dizi, yönetmen, anime ara...",
@@ -367,7 +375,8 @@ window.FASTFILM_LOCALES = {
     "adblockClose": "[ ✕ I UNDERSTAND / CLOSE ]",
     "adblockDontShow": "[ DON'T SHOW AGAIN ]",
     "name": "TÜRKÇE",
-    "code": "tr"
+    "code": "tr",
+    "adblockInstall": "[ GET UBLOCK ORIGIN ]"
   },
   "ja": {
     "placeholder": "映画、ドラマ、アニメを検索...",
@@ -408,7 +417,8 @@ window.FASTFILM_LOCALES = {
     "adblockClose": "[ ✕ I UNDERSTAND / CLOSE ]",
     "adblockDontShow": "[ DON'T SHOW AGAIN ]",
     "name": "日本語",
-    "code": "ja"
+    "code": "ja",
+    "adblockInstall": "[ GET UBLOCK ORIGIN ]"
   },
   "zh": {
     "placeholder": "搜索电影、电视剧、导演、动漫...",
@@ -449,7 +459,8 @@ window.FASTFILM_LOCALES = {
     "adblockClose": "[ ✕ I UNDERSTAND / CLOSE ]",
     "adblockDontShow": "[ DON'T SHOW AGAIN ]",
     "name": "中文 (简体)",
-    "code": "zh"
+    "code": "zh",
+    "adblockInstall": "[ GET UBLOCK ORIGIN ]"
   },
   "zh-TW": {
     "placeholder": "搜尋電影、電視劇、導演、動漫...",
@@ -490,7 +501,8 @@ window.FASTFILM_LOCALES = {
     "adblockClose": "[ ✕ I UNDERSTAND / CLOSE ]",
     "adblockDontShow": "[ DON'T SHOW AGAIN ]",
     "name": "中文 (繁體)",
-    "code": "zh-TW"
+    "code": "zh-TW",
+    "adblockInstall": "[ GET UBLOCK ORIGIN ]"
   },
   "ko": {
     "placeholder": "영화, 드라마, 감독, 애니메이션 검색...",
@@ -531,7 +543,8 @@ window.FASTFILM_LOCALES = {
     "adblockClose": "[ ✕ I UNDERSTAND / CLOSE ]",
     "adblockDontShow": "[ DON'T SHOW AGAIN ]",
     "name": "한국어",
-    "code": "ko"
+    "code": "ko",
+    "adblockInstall": "[ GET UBLOCK ORIGIN ]"
   },
   "cs": {
     "placeholder": "Search movies, TV series, directors, anime...",
@@ -572,7 +585,8 @@ window.FASTFILM_LOCALES = {
     "adblockClose": "[ ✕ I UNDERSTAND / CLOSE ]",
     "adblockDontShow": "[ DON'T SHOW AGAIN ]",
     "name": "ČEŠTINA",
-    "code": "cs"
+    "code": "cs",
+    "adblockInstall": "[ GET UBLOCK ORIGIN ]"
   },
   "sk": {
     "placeholder": "Search movies, TV series, directors, anime...",
@@ -613,7 +627,8 @@ window.FASTFILM_LOCALES = {
     "adblockClose": "[ ✕ I UNDERSTAND / CLOSE ]",
     "adblockDontShow": "[ DON'T SHOW AGAIN ]",
     "name": "SLOVENČINA",
-    "code": "sk"
+    "code": "sk",
+    "adblockInstall": "[ GET UBLOCK ORIGIN ]"
   },
   "ro": {
     "placeholder": "Search movies, TV series, directors, anime...",
@@ -654,7 +669,8 @@ window.FASTFILM_LOCALES = {
     "adblockClose": "[ ✕ I UNDERSTAND / CLOSE ]",
     "adblockDontShow": "[ DON'T SHOW AGAIN ]",
     "name": "ROMÂNĂ",
-    "code": "ro"
+    "code": "ro",
+    "adblockInstall": "[ GET UBLOCK ORIGIN ]"
   },
   "bg": {
     "placeholder": "Search movies, TV series, directors, anime...",
@@ -695,7 +711,8 @@ window.FASTFILM_LOCALES = {
     "adblockClose": "[ ✕ I UNDERSTAND / CLOSE ]",
     "adblockDontShow": "[ DON'T SHOW AGAIN ]",
     "name": "БЪЛГАРСКИ",
-    "code": "bg"
+    "code": "bg",
+    "adblockInstall": "[ GET UBLOCK ORIGIN ]"
   },
   "hu": {
     "placeholder": "Search movies, TV series, directors, anime...",
@@ -736,7 +753,8 @@ window.FASTFILM_LOCALES = {
     "adblockClose": "[ ✕ I UNDERSTAND / CLOSE ]",
     "adblockDontShow": "[ DON'T SHOW AGAIN ]",
     "name": "MAGYAR",
-    "code": "hu"
+    "code": "hu",
+    "adblockInstall": "[ GET UBLOCK ORIGIN ]"
   },
   "el": {
     "placeholder": "Search movies, TV series, directors, anime...",
@@ -777,7 +795,8 @@ window.FASTFILM_LOCALES = {
     "adblockClose": "[ ✕ I UNDERSTAND / CLOSE ]",
     "adblockDontShow": "[ DON'T SHOW AGAIN ]",
     "name": "ΕΛΛΗΝΙΚΑ",
-    "code": "el"
+    "code": "el",
+    "adblockInstall": "[ GET UBLOCK ORIGIN ]"
   },
   "nl": {
     "placeholder": "Search movies, TV series, directors, anime...",
@@ -818,7 +837,8 @@ window.FASTFILM_LOCALES = {
     "adblockClose": "[ ✕ I UNDERSTAND / CLOSE ]",
     "adblockDontShow": "[ DON'T SHOW AGAIN ]",
     "name": "NEDERLANDS",
-    "code": "nl"
+    "code": "nl",
+    "adblockInstall": "[ GET UBLOCK ORIGIN ]"
   },
   "sv": {
     "placeholder": "Search movies, TV series, directors, anime...",
@@ -859,7 +879,8 @@ window.FASTFILM_LOCALES = {
     "adblockClose": "[ ✕ I UNDERSTAND / CLOSE ]",
     "adblockDontShow": "[ DON'T SHOW AGAIN ]",
     "name": "SVENSKA",
-    "code": "sv"
+    "code": "sv",
+    "adblockInstall": "[ GET UBLOCK ORIGIN ]"
   },
   "da": {
     "placeholder": "Search movies, TV series, directors, anime...",
@@ -900,7 +921,8 @@ window.FASTFILM_LOCALES = {
     "adblockClose": "[ ✕ I UNDERSTAND / CLOSE ]",
     "adblockDontShow": "[ DON'T SHOW AGAIN ]",
     "name": "DANSK",
-    "code": "da"
+    "code": "da",
+    "adblockInstall": "[ GET UBLOCK ORIGIN ]"
   },
   "fi": {
     "placeholder": "Search movies, TV series, directors, anime...",
@@ -941,7 +963,8 @@ window.FASTFILM_LOCALES = {
     "adblockClose": "[ ✕ I UNDERSTAND / CLOSE ]",
     "adblockDontShow": "[ DON'T SHOW AGAIN ]",
     "name": "SUOMI",
-    "code": "fi"
+    "code": "fi",
+    "adblockInstall": "[ GET UBLOCK ORIGIN ]"
   },
   "no": {
     "placeholder": "Search movies, TV series, directors, anime...",
@@ -982,7 +1005,8 @@ window.FASTFILM_LOCALES = {
     "adblockClose": "[ ✕ I UNDERSTAND / CLOSE ]",
     "adblockDontShow": "[ DON'T SHOW AGAIN ]",
     "name": "NORSK",
-    "code": "no"
+    "code": "no",
+    "adblockInstall": "[ GET UBLOCK ORIGIN ]"
   },
   "ar": {
     "placeholder": "Search movies, TV series, directors, anime...",
@@ -1023,7 +1047,8 @@ window.FASTFILM_LOCALES = {
     "adblockClose": "[ ✕ I UNDERSTAND / CLOSE ]",
     "adblockDontShow": "[ DON'T SHOW AGAIN ]",
     "name": "العربية",
-    "code": "ar"
+    "code": "ar",
+    "adblockInstall": "[ GET UBLOCK ORIGIN ]"
   },
   "he": {
     "placeholder": "Search movies, TV series, directors, anime...",
@@ -1064,7 +1089,8 @@ window.FASTFILM_LOCALES = {
     "adblockClose": "[ ✕ I UNDERSTAND / CLOSE ]",
     "adblockDontShow": "[ DON'T SHOW AGAIN ]",
     "name": "עברית",
-    "code": "he"
+    "code": "he",
+    "adblockInstall": "[ GET UBLOCK ORIGIN ]"
   },
   "hi": {
     "placeholder": "Search movies, TV series, directors, anime...",
@@ -1105,7 +1131,8 @@ window.FASTFILM_LOCALES = {
     "adblockClose": "[ ✕ I UNDERSTAND / CLOSE ]",
     "adblockDontShow": "[ DON'T SHOW AGAIN ]",
     "name": "हिन्दी",
-    "code": "hi"
+    "code": "hi",
+    "adblockInstall": "[ GET UBLOCK ORIGIN ]"
   },
   "id": {
     "placeholder": "Search movies, TV series, directors, anime...",
@@ -1146,7 +1173,8 @@ window.FASTFILM_LOCALES = {
     "adblockClose": "[ ✕ I UNDERSTAND / CLOSE ]",
     "adblockDontShow": "[ DON'T SHOW AGAIN ]",
     "name": "BAHASA INDONESIA",
-    "code": "id"
+    "code": "id",
+    "adblockInstall": "[ GET UBLOCK ORIGIN ]"
   },
   "vi": {
     "placeholder": "Search movies, TV series, directors, anime...",
@@ -1187,7 +1215,8 @@ window.FASTFILM_LOCALES = {
     "adblockClose": "[ ✕ I UNDERSTAND / CLOSE ]",
     "adblockDontShow": "[ DON'T SHOW AGAIN ]",
     "name": "TIẾNG VIỆT",
-    "code": "vi"
+    "code": "vi",
+    "adblockInstall": "[ GET UBLOCK ORIGIN ]"
   },
   "th": {
     "placeholder": "Search movies, TV series, directors, anime...",
@@ -1228,7 +1257,8 @@ window.FASTFILM_LOCALES = {
     "adblockClose": "[ ✕ I UNDERSTAND / CLOSE ]",
     "adblockDontShow": "[ DON'T SHOW AGAIN ]",
     "name": "ไทย",
-    "code": "th"
+    "code": "th",
+    "adblockInstall": "[ GET UBLOCK ORIGIN ]"
   },
   "fa": {
     "placeholder": "Search movies, TV series, directors, anime...",
@@ -1269,7 +1299,8 @@ window.FASTFILM_LOCALES = {
     "adblockClose": "[ ✕ I UNDERSTAND / CLOSE ]",
     "adblockDontShow": "[ DON'T SHOW AGAIN ]",
     "name": "فارسی",
-    "code": "fa"
+    "code": "fa",
+    "adblockInstall": "[ GET UBLOCK ORIGIN ]"
   },
   "ms": {
     "placeholder": "Search movies, TV series, directors, anime...",
@@ -1310,7 +1341,8 @@ window.FASTFILM_LOCALES = {
     "adblockClose": "[ ✕ I UNDERSTAND / CLOSE ]",
     "adblockDontShow": "[ DON'T SHOW AGAIN ]",
     "name": "BAHASA MELAYU",
-    "code": "ms"
+    "code": "ms",
+    "adblockInstall": "[ GET UBLOCK ORIGIN ]"
   },
   "fil": {
     "placeholder": "Search movies, TV series, directors, anime...",
@@ -1351,7 +1383,8 @@ window.FASTFILM_LOCALES = {
     "adblockClose": "[ ✕ I UNDERSTAND / CLOSE ]",
     "adblockDontShow": "[ DON'T SHOW AGAIN ]",
     "name": "FILIPINO",
-    "code": "fil"
+    "code": "fil",
+    "adblockInstall": "[ GET UBLOCK ORIGIN ]"
   },
   "sr": {
     "placeholder": "Search movies, TV series, directors, anime...",
@@ -1392,7 +1425,8 @@ window.FASTFILM_LOCALES = {
     "adblockClose": "[ ✕ I UNDERSTAND / CLOSE ]",
     "adblockDontShow": "[ DON'T SHOW AGAIN ]",
     "name": "СРПСКИ",
-    "code": "sr"
+    "code": "sr",
+    "adblockInstall": "[ GET UBLOCK ORIGIN ]"
   },
   "hr": {
     "placeholder": "Search movies, TV series, directors, anime...",
@@ -1433,7 +1467,8 @@ window.FASTFILM_LOCALES = {
     "adblockClose": "[ ✕ I UNDERSTAND / CLOSE ]",
     "adblockDontShow": "[ DON'T SHOW AGAIN ]",
     "name": "HRVATSKI",
-    "code": "hr"
+    "code": "hr",
+    "adblockInstall": "[ GET UBLOCK ORIGIN ]"
   },
   "sl": {
     "placeholder": "Search movies, TV series, directors, anime...",
@@ -1474,7 +1509,8 @@ window.FASTFILM_LOCALES = {
     "adblockClose": "[ ✕ I UNDERSTAND / CLOSE ]",
     "adblockDontShow": "[ DON'T SHOW AGAIN ]",
     "name": "SLOVENŠČINA",
-    "code": "sl"
+    "code": "sl",
+    "adblockInstall": "[ GET UBLOCK ORIGIN ]"
   },
   "et": {
     "placeholder": "Search movies, TV series, directors, anime...",
@@ -1515,7 +1551,8 @@ window.FASTFILM_LOCALES = {
     "adblockClose": "[ ✕ I UNDERSTAND / CLOSE ]",
     "adblockDontShow": "[ DON'T SHOW AGAIN ]",
     "name": "EESTI",
-    "code": "et"
+    "code": "et",
+    "adblockInstall": "[ GET UBLOCK ORIGIN ]"
   },
   "lv": {
     "placeholder": "Search movies, TV series, directors, anime...",
@@ -1556,7 +1593,8 @@ window.FASTFILM_LOCALES = {
     "adblockClose": "[ ✕ I UNDERSTAND / CLOSE ]",
     "adblockDontShow": "[ DON'T SHOW AGAIN ]",
     "name": "LATVIEŠU",
-    "code": "lv"
+    "code": "lv",
+    "adblockInstall": "[ GET UBLOCK ORIGIN ]"
   },
   "lt": {
     "placeholder": "Search movies, TV series, directors, anime...",
@@ -1597,7 +1635,8 @@ window.FASTFILM_LOCALES = {
     "adblockClose": "[ ✕ I UNDERSTAND / CLOSE ]",
     "adblockDontShow": "[ DON'T SHOW AGAIN ]",
     "name": "LIETUVIŲ",
-    "code": "lt"
+    "code": "lt",
+    "adblockInstall": "[ GET UBLOCK ORIGIN ]"
   },
   "ka": {
     "placeholder": "Search movies, TV series, directors, anime...",
@@ -1638,7 +1677,8 @@ window.FASTFILM_LOCALES = {
     "adblockClose": "[ ✕ I UNDERSTAND / CLOSE ]",
     "adblockDontShow": "[ DON'T SHOW AGAIN ]",
     "name": "ქართული",
-    "code": "ka"
+    "code": "ka",
+    "adblockInstall": "[ GET UBLOCK ORIGIN ]"
   },
   "hy": {
     "placeholder": "Search movies, TV series, directors, anime...",
@@ -1679,7 +1719,8 @@ window.FASTFILM_LOCALES = {
     "adblockClose": "[ ✕ I UNDERSTAND / CLOSE ]",
     "adblockDontShow": "[ DON'T SHOW AGAIN ]",
     "name": "ՀԱՅԵՐԵՆ",
-    "code": "hy"
+    "code": "hy",
+    "adblockInstall": "[ GET UBLOCK ORIGIN ]"
   },
   "az": {
     "placeholder": "Search movies, TV series, directors, anime...",
@@ -1720,7 +1761,8 @@ window.FASTFILM_LOCALES = {
     "adblockClose": "[ ✕ I UNDERSTAND / CLOSE ]",
     "adblockDontShow": "[ DON'T SHOW AGAIN ]",
     "name": "AZƏRBAYCAN",
-    "code": "az"
+    "code": "az",
+    "adblockInstall": "[ GET UBLOCK ORIGIN ]"
   },
   "kk": {
     "placeholder": "Search movies, TV series, directors, anime...",
@@ -1761,7 +1803,8 @@ window.FASTFILM_LOCALES = {
     "adblockClose": "[ ✕ I UNDERSTAND / CLOSE ]",
     "adblockDontShow": "[ DON'T SHOW AGAIN ]",
     "name": "ҚАЗАҚША",
-    "code": "kk"
+    "code": "kk",
+    "adblockInstall": "[ GET UBLOCK ORIGIN ]"
   },
   "uz": {
     "placeholder": "Search movies, TV series, directors, anime...",
@@ -1802,7 +1845,8 @@ window.FASTFILM_LOCALES = {
     "adblockClose": "[ ✕ I UNDERSTAND / CLOSE ]",
     "adblockDontShow": "[ DON'T SHOW AGAIN ]",
     "name": "OʻZBEKCHA",
-    "code": "uz"
+    "code": "uz",
+    "adblockInstall": "[ GET UBLOCK ORIGIN ]"
   },
   "sq": {
     "placeholder": "Search movies, TV series, directors, anime...",
@@ -1843,7 +1887,8 @@ window.FASTFILM_LOCALES = {
     "adblockClose": "[ ✕ I UNDERSTAND / CLOSE ]",
     "adblockDontShow": "[ DON'T SHOW AGAIN ]",
     "name": "SHQIP",
-    "code": "sq"
+    "code": "sq",
+    "adblockInstall": "[ GET UBLOCK ORIGIN ]"
   },
   "mk": {
     "placeholder": "Search movies, TV series, directors, anime...",
@@ -1884,7 +1929,8 @@ window.FASTFILM_LOCALES = {
     "adblockClose": "[ ✕ I UNDERSTAND / CLOSE ]",
     "adblockDontShow": "[ DON'T SHOW AGAIN ]",
     "name": "МАКЕДОНСКИ",
-    "code": "mk"
+    "code": "mk",
+    "adblockInstall": "[ GET UBLOCK ORIGIN ]"
   },
   "bs": {
     "placeholder": "Search movies, TV series, directors, anime...",
@@ -1925,7 +1971,8 @@ window.FASTFILM_LOCALES = {
     "adblockClose": "[ ✕ I UNDERSTAND / CLOSE ]",
     "adblockDontShow": "[ DON'T SHOW AGAIN ]",
     "name": "BOSANSKI",
-    "code": "bs"
+    "code": "bs",
+    "adblockInstall": "[ GET UBLOCK ORIGIN ]"
   },
   "is": {
     "placeholder": "Search movies, TV series, directors, anime...",
@@ -1966,7 +2013,8 @@ window.FASTFILM_LOCALES = {
     "adblockClose": "[ ✕ I UNDERSTAND / CLOSE ]",
     "adblockDontShow": "[ DON'T SHOW AGAIN ]",
     "name": "ÍSLENSKA",
-    "code": "is"
+    "code": "is",
+    "adblockInstall": "[ GET UBLOCK ORIGIN ]"
   },
   "ga": {
     "placeholder": "Search movies, TV series, directors, anime...",
@@ -2007,7 +2055,8 @@ window.FASTFILM_LOCALES = {
     "adblockClose": "[ ✕ I UNDERSTAND / CLOSE ]",
     "adblockDontShow": "[ DON'T SHOW AGAIN ]",
     "name": "GAEILGE",
-    "code": "ga"
+    "code": "ga",
+    "adblockInstall": "[ GET UBLOCK ORIGIN ]"
   },
   "cy": {
     "placeholder": "Search movies, TV series, directors, anime...",
@@ -2048,7 +2097,8 @@ window.FASTFILM_LOCALES = {
     "adblockClose": "[ ✕ I UNDERSTAND / CLOSE ]",
     "adblockDontShow": "[ DON'T SHOW AGAIN ]",
     "name": "CYMRAEG",
-    "code": "cy"
+    "code": "cy",
+    "adblockInstall": "[ GET UBLOCK ORIGIN ]"
   },
   "af": {
     "placeholder": "Search movies, TV series, directors, anime...",
@@ -2089,7 +2139,8 @@ window.FASTFILM_LOCALES = {
     "adblockClose": "[ ✕ I UNDERSTAND / CLOSE ]",
     "adblockDontShow": "[ DON'T SHOW AGAIN ]",
     "name": "AFRIKAANS",
-    "code": "af"
+    "code": "af",
+    "adblockInstall": "[ GET UBLOCK ORIGIN ]"
   },
   "sw": {
     "placeholder": "Search movies, TV series, directors, anime...",
@@ -2130,7 +2181,8 @@ window.FASTFILM_LOCALES = {
     "adblockClose": "[ ✕ I UNDERSTAND / CLOSE ]",
     "adblockDontShow": "[ DON'T SHOW AGAIN ]",
     "name": "KISWAHILI",
-    "code": "sw"
+    "code": "sw",
+    "adblockInstall": "[ GET UBLOCK ORIGIN ]"
   },
   "bn": {
     "placeholder": "Search movies, TV series, directors, anime...",
@@ -2171,7 +2223,8 @@ window.FASTFILM_LOCALES = {
     "adblockClose": "[ ✕ I UNDERSTAND / CLOSE ]",
     "adblockDontShow": "[ DON'T SHOW AGAIN ]",
     "name": "বাংলা",
-    "code": "bn"
+    "code": "bn",
+    "adblockInstall": "[ GET UBLOCK ORIGIN ]"
   },
   "ta": {
     "placeholder": "Search movies, TV series, directors, anime...",
@@ -2212,7 +2265,8 @@ window.FASTFILM_LOCALES = {
     "adblockClose": "[ ✕ I UNDERSTAND / CLOSE ]",
     "adblockDontShow": "[ DON'T SHOW AGAIN ]",
     "name": "தமிழ்",
-    "code": "ta"
+    "code": "ta",
+    "adblockInstall": "[ GET UBLOCK ORIGIN ]"
   },
   "te": {
     "placeholder": "Search movies, TV series, directors, anime...",
@@ -2253,7 +2307,8 @@ window.FASTFILM_LOCALES = {
     "adblockClose": "[ ✕ I UNDERSTAND / CLOSE ]",
     "adblockDontShow": "[ DON'T SHOW AGAIN ]",
     "name": "తెలుగు",
-    "code": "te"
+    "code": "te",
+    "adblockInstall": "[ GET UBLOCK ORIGIN ]"
   },
   "mr": {
     "placeholder": "Search movies, TV series, directors, anime...",
@@ -2294,7 +2349,8 @@ window.FASTFILM_LOCALES = {
     "adblockClose": "[ ✕ I UNDERSTAND / CLOSE ]",
     "adblockDontShow": "[ DON'T SHOW AGAIN ]",
     "name": "मराठी",
-    "code": "mr"
+    "code": "mr",
+    "adblockInstall": "[ GET UBLOCK ORIGIN ]"
   },
   "gu": {
     "placeholder": "Search movies, TV series, directors, anime...",
@@ -2335,7 +2391,8 @@ window.FASTFILM_LOCALES = {
     "adblockClose": "[ ✕ I UNDERSTAND / CLOSE ]",
     "adblockDontShow": "[ DON'T SHOW AGAIN ]",
     "name": "ગુજરાતી",
-    "code": "gu"
+    "code": "gu",
+    "adblockInstall": "[ GET UBLOCK ORIGIN ]"
   },
   "kn": {
     "placeholder": "Search movies, TV series, directors, anime...",
@@ -2376,7 +2433,8 @@ window.FASTFILM_LOCALES = {
     "adblockClose": "[ ✕ I UNDERSTAND / CLOSE ]",
     "adblockDontShow": "[ DON'T SHOW AGAIN ]",
     "name": "ಕನ್ನಡ",
-    "code": "kn"
+    "code": "kn",
+    "adblockInstall": "[ GET UBLOCK ORIGIN ]"
   },
   "ml": {
     "placeholder": "Search movies, TV series, directors, anime...",
@@ -2417,7 +2475,8 @@ window.FASTFILM_LOCALES = {
     "adblockClose": "[ ✕ I UNDERSTAND / CLOSE ]",
     "adblockDontShow": "[ DON'T SHOW AGAIN ]",
     "name": "മലയാളം",
-    "code": "ml"
+    "code": "ml",
+    "adblockInstall": "[ GET UBLOCK ORIGIN ]"
   },
   "pa": {
     "placeholder": "Search movies, TV series, directors, anime...",
@@ -2458,7 +2517,8 @@ window.FASTFILM_LOCALES = {
     "adblockClose": "[ ✕ I UNDERSTAND / CLOSE ]",
     "adblockDontShow": "[ DON'T SHOW AGAIN ]",
     "name": "ਪੰਜਾਬੀ",
-    "code": "pa"
+    "code": "pa",
+    "adblockInstall": "[ GET UBLOCK ORIGIN ]"
   },
   "ur": {
     "placeholder": "Search movies, TV series, directors, anime...",
@@ -2499,7 +2559,8 @@ window.FASTFILM_LOCALES = {
     "adblockClose": "[ ✕ I UNDERSTAND / CLOSE ]",
     "adblockDontShow": "[ DON'T SHOW AGAIN ]",
     "name": "اردو",
-    "code": "ur"
+    "code": "ur",
+    "adblockInstall": "[ GET UBLOCK ORIGIN ]"
   },
   "my": {
     "placeholder": "Search movies, TV series, directors, anime...",
@@ -2540,7 +2601,8 @@ window.FASTFILM_LOCALES = {
     "adblockClose": "[ ✕ I UNDERSTAND / CLOSE ]",
     "adblockDontShow": "[ DON'T SHOW AGAIN ]",
     "name": "မြန်မာ",
-    "code": "my"
+    "code": "my",
+    "adblockInstall": "[ GET UBLOCK ORIGIN ]"
   },
   "km": {
     "placeholder": "Search movies, TV series, directors, anime...",
@@ -2581,7 +2643,8 @@ window.FASTFILM_LOCALES = {
     "adblockClose": "[ ✕ I UNDERSTAND / CLOSE ]",
     "adblockDontShow": "[ DON'T SHOW AGAIN ]",
     "name": "ខ្មែរ",
-    "code": "km"
+    "code": "km",
+    "adblockInstall": "[ GET UBLOCK ORIGIN ]"
   },
   "lo": {
     "placeholder": "Search movies, TV series, directors, anime...",
@@ -2622,7 +2685,8 @@ window.FASTFILM_LOCALES = {
     "adblockClose": "[ ✕ I UNDERSTAND / CLOSE ]",
     "adblockDontShow": "[ DON'T SHOW AGAIN ]",
     "name": "ລາວ",
-    "code": "lo"
+    "code": "lo",
+    "adblockInstall": "[ GET UBLOCK ORIGIN ]"
   },
   "si": {
     "placeholder": "Search movies, TV series, directors, anime...",
@@ -2663,7 +2727,8 @@ window.FASTFILM_LOCALES = {
     "adblockClose": "[ ✕ I UNDERSTAND / CLOSE ]",
     "adblockDontShow": "[ DON'T SHOW AGAIN ]",
     "name": "සිංහල",
-    "code": "si"
+    "code": "si",
+    "adblockInstall": "[ GET UBLOCK ORIGIN ]"
   },
   "mn": {
     "placeholder": "Search movies, TV series, directors, anime...",
@@ -2704,7 +2769,8 @@ window.FASTFILM_LOCALES = {
     "adblockClose": "[ ✕ I UNDERSTAND / CLOSE ]",
     "adblockDontShow": "[ DON'T SHOW AGAIN ]",
     "name": "МОНГОЛ",
-    "code": "mn"
+    "code": "mn",
+    "adblockInstall": "[ GET UBLOCK ORIGIN ]"
   },
   "ne": {
     "placeholder": "Search movies, TV series, directors, anime...",
@@ -2745,7 +2811,8 @@ window.FASTFILM_LOCALES = {
     "adblockClose": "[ ✕ I UNDERSTAND / CLOSE ]",
     "adblockDontShow": "[ DON'T SHOW AGAIN ]",
     "name": "नेपाली",
-    "code": "ne"
+    "code": "ne",
+    "adblockInstall": "[ GET UBLOCK ORIGIN ]"
   },
   "eu": {
     "placeholder": "Search movies, TV series, directors, anime...",
@@ -2786,7 +2853,8 @@ window.FASTFILM_LOCALES = {
     "adblockClose": "[ ✕ I UNDERSTAND / CLOSE ]",
     "adblockDontShow": "[ DON'T SHOW AGAIN ]",
     "name": "EUSKARA",
-    "code": "eu"
+    "code": "eu",
+    "adblockInstall": "[ GET UBLOCK ORIGIN ]"
   },
   "ca": {
     "placeholder": "Search movies, TV series, directors, anime...",
@@ -2827,7 +2895,8 @@ window.FASTFILM_LOCALES = {
     "adblockClose": "[ ✕ I UNDERSTAND / CLOSE ]",
     "adblockDontShow": "[ DON'T SHOW AGAIN ]",
     "name": "CATALÀ",
-    "code": "ca"
+    "code": "ca",
+    "adblockInstall": "[ GET UBLOCK ORIGIN ]"
   },
   "gl": {
     "placeholder": "Search movies, TV series, directors, anime...",
@@ -2868,7 +2937,8 @@ window.FASTFILM_LOCALES = {
     "adblockClose": "[ ✕ I UNDERSTAND / CLOSE ]",
     "adblockDontShow": "[ DON'T SHOW AGAIN ]",
     "name": "GALEGO",
-    "code": "gl"
+    "code": "gl",
+    "adblockInstall": "[ GET UBLOCK ORIGIN ]"
   },
   "be": {
     "placeholder": "Search movies, TV series, directors, anime...",
@@ -2909,7 +2979,8 @@ window.FASTFILM_LOCALES = {
     "adblockClose": "[ ✕ I UNDERSTAND / CLOSE ]",
     "adblockDontShow": "[ DON'T SHOW AGAIN ]",
     "name": "БЕЛАРУСКАЯ",
-    "code": "be"
+    "code": "be",
+    "adblockInstall": "[ GET UBLOCK ORIGIN ]"
   },
   "la": {
     "placeholder": "Search movies, TV series, directors, anime...",
@@ -2950,7 +3021,8 @@ window.FASTFILM_LOCALES = {
     "adblockClose": "[ ✕ I UNDERSTAND / CLOSE ]",
     "adblockDontShow": "[ DON'T SHOW AGAIN ]",
     "name": "LATINA",
-    "code": "la"
+    "code": "la",
+    "adblockInstall": "[ GET UBLOCK ORIGIN ]"
   },
   "eo": {
     "placeholder": "Search movies, TV series, directors, anime...",
@@ -2991,7 +3063,8 @@ window.FASTFILM_LOCALES = {
     "adblockClose": "[ ✕ I UNDERSTAND / CLOSE ]",
     "adblockDontShow": "[ DON'T SHOW AGAIN ]",
     "name": "ESPERANTO",
-    "code": "eo"
+    "code": "eo",
+    "adblockInstall": "[ GET UBLOCK ORIGIN ]"
   },
   "pt-BR": {
     "placeholder": "Search movies, TV series, directors, anime...",
@@ -3032,7 +3105,8 @@ window.FASTFILM_LOCALES = {
     "adblockClose": "[ ✕ I UNDERSTAND / CLOSE ]",
     "adblockDontShow": "[ DON'T SHOW AGAIN ]",
     "name": "PORTUGUÊS (BRASIL)",
-    "code": "pt-BR"
+    "code": "pt-BR",
+    "adblockInstall": "[ GET UBLOCK ORIGIN ]"
   },
   "es-MX": {
     "placeholder": "Search movies, TV series, directors, anime...",
@@ -3073,7 +3147,8 @@ window.FASTFILM_LOCALES = {
     "adblockClose": "[ ✕ I UNDERSTAND / CLOSE ]",
     "adblockDontShow": "[ DON'T SHOW AGAIN ]",
     "name": "ESPAÑOL (MÉXICO)",
-    "code": "es-MX"
+    "code": "es-MX",
+    "adblockInstall": "[ GET UBLOCK ORIGIN ]"
   },
   "fr-CA": {
     "placeholder": "Search movies, TV series, directors, anime...",
@@ -3114,7 +3189,8 @@ window.FASTFILM_LOCALES = {
     "adblockClose": "[ ✕ I UNDERSTAND / CLOSE ]",
     "adblockDontShow": "[ DON'T SHOW AGAIN ]",
     "name": "FRANÇAIS (CANADA)",
-    "code": "fr-CA"
+    "code": "fr-CA",
+    "adblockInstall": "[ GET UBLOCK ORIGIN ]"
   },
   "en-GB": {
     "placeholder": "Search movies, TV series, directors, anime...",
@@ -3155,7 +3231,8 @@ window.FASTFILM_LOCALES = {
     "adblockClose": "[ ✕ I UNDERSTAND / CLOSE ]",
     "adblockDontShow": "[ DON'T SHOW AGAIN ]",
     "name": "ENGLISH (UK)",
-    "code": "en-GB"
+    "code": "en-GB",
+    "adblockInstall": "[ GET UBLOCK ORIGIN ]"
   },
   "en-US": {
     "placeholder": "Search movies, TV series, directors, anime...",
@@ -3196,6 +3273,7 @@ window.FASTFILM_LOCALES = {
     "adblockClose": "[ ✕ I UNDERSTAND / CLOSE ]",
     "adblockDontShow": "[ DON'T SHOW AGAIN ]",
     "name": "ENGLISH (US)",
-    "code": "en-US"
+    "code": "en-US",
+    "adblockInstall": "[ GET UBLOCK ORIGIN ]"
   }
 };
