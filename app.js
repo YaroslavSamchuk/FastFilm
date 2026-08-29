@@ -15,17 +15,14 @@ const VIDSRC_SERVERS = [
   { name: "Fade", url: "https://rivestream.org/embed" },
   { name: "Vidora", url: "https://anyembed.xyz/embed" },
   { name: "Nero", url: "https://vidfast.pro" },
-  { name: "Astra", url: "https://vidsrc.su/embed" },
   { name: "Vidplay", url: "https://vidsrc.cc/v2/embed" },
   { name: "Flixify", url: "https://vidflix.club" },
-  { name: "Azute", url: "https://vidrock.ru" },
   { name: "Yoru", url: "https://video.moviepire.co/embed" },
   { name: "4K", url: "https://player.videasy.net" },
   { name: "Nest", url: "https://vidnest.fun" },
   { name: "Mist", url: "https://play.xpass.top/e" },
   { name: "Peach", url: "https://peachify.top/embed" },
   { name: "Pass", url: "https://vidcore.net" },
-  { name: "Mistify", url: "https://vaplayer.ru/embed" },
   { name: "Simplify", url: "https://zxcstream.xyz/player" },
   { name: "Asia", url: "https://nhdapi.com/embed" },
   { name: "Cine", url: "https://cinesrc.st/embed" },
@@ -39,7 +36,7 @@ const VIDSRC_SERVERS = [
   { name: "4K2", url: "https://www.vidking.net/embed" },
   { name: "Prime", url: "https://player.vidrush.net/embed" },
   { name: "Hindi", url: "https://vidsrc.wtf/api/1" },
-  { name: "Vidsrc", url: "https://vidsrcme.ru/embed" },
+  { name: "Vidsrc", url: "https://vidsrc.me/embed" },
   { name: "2embed", url: "https://www.2embed.stream/embed" },
   { name: "PrimeWire", url: "https://primesrc.me/embed" },
   { name: "French", url: "https://frembed.asia/api" },
@@ -59,11 +56,11 @@ function buildStreamUrl(server, id, type = "movie") {
     if (s.includes("vidlink")) return `${base}/tv/${id}/1/1`;
     if (s.includes("autoembed")) return `${base}/tv/${id}/1/1`;
     if (s.includes("vidbinge")) return `${base}/tv/${id}/1/1`;
-    if (s === "simplify") return `${base}/tv/${id}/1/1?autoplay=true&color=addc35&back=false&domainAd=braflix.win`;
+    if (s === "simplify") return `${base}/tv/${id}/1/1?color=addc35&back=false&domainAd=braflix.win`;
     if (s === "hindi") return `${base}/tv/?id=${id}&s=1&e=1&poster=https://image.tmdb.org/t/p/w780/enNubozHn9pXi0ycTVYUWfpHZm.jpg&color=ffffff`;
     if (s === "4k2") return `${base}/tv/${id}/1/1`;
     if (s === "prime") return `${base}/tv/${id}/1/1`;
-    if (s === "4khd") return `${base}/tv/${id}/1/1?autoPlay=true&theme=addc35`;
+    if (s === "4khd") return `${base}/tv/${id}/1/1?theme=addc35`;
     if (s === "primewire") return `${base}/tv?imdb=${id}&season=1&episode=1&fallback=true&server_order=PrimeVid,Voe,Dood`;
     if (s === "french") return `${base}/serie.php?id=${id}&sa=1&epi=1`;
     if (s === "fade") return `${base}?type=tv&id=${id}&season=1&episode=1&sendMetadata=true`;
@@ -74,11 +71,11 @@ function buildStreamUrl(server, id, type = "movie") {
     if (s.includes("vidlink")) return `${base}/movie/${id}`;
     if (s.includes("autoembed")) return `${base}/movie/${id}`;
     if (s.includes("vidbinge")) return `${base}/movie/${id}`;
-    if (s === "simplify") return `${base}/movie/${id}?autoplay=true&color=addc35&back=false&domainAd=braflix.win`;
+    if (s === "simplify") return `${base}/movie/${id}?color=addc35&back=false&domainAd=braflix.win`;
     if (s === "hindi") return `${base}/movie/?id=${id}&s=undefined&e=undefined&poster=https://image.tmdb.org/t/p/w780/enNubozHn9pXi0ycTVYUWfpHZm.jpg&color=ffffff`;
     if (s === "4k2") return `${base}/movie/${id}`;
     if (s === "prime") return `${base}/${id}`;
-    if (s === "4khd") return `${base}/movie/${id}?autoPlay=true&theme=addc35`;
+    if (s === "4khd") return `${base}/movie/${id}?theme=addc35`;
     if (s === "primewire") return `${base}/movie?imdb=${id}&fallback=true&server_order=PrimeVid,Voe,Dood`;
     if (s === "french") return `${base}/film.php?id=${id}`;
     if (s === "fade") return `${base}?type=movie&id=${id}&sendMetadata=true`;
@@ -458,7 +455,7 @@ function changeLanguage(lang) {
   if (browseData) renderCollections(browseData);
   if (currentItem) {
     updateWatchSidebarTitles();
-    renderProviderControls();
+    renderProviderControls(false);
   }
 }
 
@@ -646,7 +643,7 @@ async function triggerSearch() {
           const items = json?.data?.items || json?.items || [];
           if (Array.isArray(items)) {
             items.forEach(it => {
-              const enTitle = it.title?.original || it.title?.russian || 'Film';
+              const enTitle = it.title?.original || it.title || it.name || 'Film';
               rawList.push({
                 id: null,
                 kp_id: it.id,
@@ -1079,7 +1076,7 @@ function switchProvider(prov) {
   renderProviderControls();
 }
 
-async function renderProviderControls() {
+async function renderProviderControls(reloadIframe = true) {
   const dict = DICT[currentLang] || DICT.en;
   const primaryList = document.getElementById("primarySelectorList");
   const subsContainer = document.getElementById("subsContainer");
@@ -1111,7 +1108,7 @@ async function renderProviderControls() {
             // Звіряємо фільм за TMDB ID або title.original + роком
             let match = items.find(it => {
               if (targetTmdb && (it.id_tmdb === targetTmdb || it.sources?.tmdb === targetTmdb)) return true;
-              const itOrig = normalizeTitleKey(it.title?.original || it.title?.russian);
+              const itOrig = normalizeTitleKey(it.title?.original || it.title || it.name);
               const curOrig = normalizeTitleKey(engTitle);
               const yearMatch = targetYear && it.year ? String(it.year).startsWith(targetYear) : true;
               return (itOrig === curOrig || itOrig.includes(curOrig) || curOrig.includes(itOrig)) && yearMatch;
@@ -1167,9 +1164,11 @@ async function renderProviderControls() {
           primaryList.appendChild(btn);
         });
 
-        const initialPlayer = players[selectedBalancerIndex] || players[0];
-        if (initialPlayer && initialPlayer.iframeUrl) {
-          setIframe(initialPlayer.iframeUrl);
+        if (reloadIframe) {
+          const initialPlayer = players[selectedBalancerIndex] || players[0];
+          if (initialPlayer && initialPlayer.iframeUrl) {
+            setIframe(initialPlayer.iframeUrl);
+          }
         }
       } else {
         primaryList.innerHTML = '<span style="color:var(--text-muted); font-size:11px;">[ KINOBOX: NO BALANCERS RETURNED BY API (AVAILABLE VIA HOSTED CLOUDFLARE PAGES) ]</span>';
@@ -1194,9 +1193,10 @@ async function renderProviderControls() {
 
     streams.forEach((st, idx) => {
       const btn = document.createElement("button");
-      btn.className = `item-btn ${idx === 0 ? 'active' : ''}`;
+      btn.className = `item-btn ${idx === selectedBalancerIndex ? 'active' : ''}`;
       btn.innerText = `[ ${st.name} ]`;
       btn.onclick = () => {
+        selectedBalancerIndex = idx;
         document.querySelectorAll("#primarySelectorList .item-btn").forEach(b => b.classList.remove("active"));
         btn.classList.add("active");
         setIframe(st.iframe_url);
@@ -1204,8 +1204,9 @@ async function renderProviderControls() {
       primaryList.appendChild(btn);
     });
 
-    if (streams.length > 0) {
-      setIframe(streams[0].iframe_url);
+    if (reloadIframe && streams.length > 0) {
+      const initialStream = streams[selectedBalancerIndex] || streams[0];
+      setIframe(initialStream.iframe_url);
     }
   }
 }
@@ -1268,6 +1269,7 @@ async function loadSubtitles(id, type) {
 function setIframe(url) {
   const iframe = document.getElementById("videoIframe");
   if (!iframe) return;
+  if (iframe.src === url) return; // Ніколи не перезавантажувати плеєр, якщо це те саме посилання
   iframe.removeAttribute("sandbox");
   iframe.src = url;
 }
