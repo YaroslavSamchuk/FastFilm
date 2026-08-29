@@ -1117,154 +1117,47 @@ async function renderProviderControls(reloadIframe = true) {
 
   if (activeProvider === 'kinobox') {
     document.getElementById("labelPrimarySelector").innerText = dict.primaryKinobox;
-    primaryList.innerHTML = '<span class="spinner"></span> LOADING KINOBOX PLAYERS (ALLOHA, VIDEOSEED, COLLAPS)...';
+    primaryList.innerHTML = "";
 
-    let kpId = currentItem.kp_id;
+    const tmdbId = currentItem.id || '969681';
+    const kpId = currentItem.kp_id || '';
+    const isTv = (currentItem.type === 'tv' || currentItem.type === 'series');
 
-    try {
-      // 1. Якщо kp_id ще не встановлено, шукаємо за англійською назвою в Kinobox та звіряємо з TMDB
-      if (!kpId) {
-        const engTitle = (currentItem.title_en || currentItem.title || "").trim();
-        const cleanTitle = engTitle.replace(/[:\-]+/g, " ").trim();
-        const baseTitle = cleanTitle.split(" ")[0];
-        const targetYear = currentItem.year ? String(currentItem.year).slice(0, 4) : "";
-        const targetTmdb = currentItem.id ? String(currentItem.id) : "";
+    const collapsUrl = kpId 
+      ? `https://api.delivembed.cc/embed/kp/${kpId}` 
+      : `https://api.delivembed.cc/embed/tmdb/${tmdbId}`;
 
-        const queries = [engTitle, cleanTitle, baseTitle].filter(Boolean);
+    const players = [
+      { type: "Collaps (Multi)", iframeUrl: collapsUrl },
+      { type: "Alloha / Videocdn", iframeUrl: isTv ? `https://vidsrc.cc/v2/embed/tv/${tmdbId}/1/1` : `https://vidsrc.cc/v2/embed/movie/${tmdbId}` },
+      { type: "Videasy (Fast)", iframeUrl: isTv ? `https://player.videasy.net/tv/${tmdbId}/1/1` : `https://player.videasy.net/movie/${tmdbId}` },
+      { type: "AutoEmbed (HD)", iframeUrl: isTv ? `https://player.autoembed.app/embed/tv/${tmdbId}/1/1` : `https://player.autoembed.app/embed/movie/${tmdbId}` },
+      { type: "VidLink", iframeUrl: isTv ? `https://vidlink.pro/tv/${tmdbId}/1/1` : `https://vidlink.pro/movie/${tmdbId}` }
+    ];
 
-        for (const q of queries) {
-          const searchData = await fetchKinobox('search', { query: q });
-          const items = searchData?.data?.items || searchData?.items || [];
-          if (items.length > 0) {
-            // Звіряємо фільм за TMDB ID або title.original + роком
-            let match = items.find(it => {
-              if (targetTmdb && (it.id_tmdb === targetTmdb || it.sources?.tmdb === targetTmdb)) return true;
-              const itOrig = normalizeTitleKey(it.title?.original || it.title || it.name);
-              const curOrig = normalizeTitleKey(engTitle);
-              const yearMatch = targetYear && it.year ? String(it.year).startsWith(targetYear) : true;
-              return (itOrig === curOrig || itOrig.includes(curOrig) || curOrig.includes(itOrig)) && yearMatch;
-            }) || items[0];
-
-            if (match) {
-              kpId = match.id;
-              currentItem.kp_id = kpId;
-              if (match.poster && (!currentItem.poster || currentItem.poster.includes('unsplash'))) {
-                currentItem.poster = match.poster;
-                const wPoster = document.getElementById("watchPoster");
-                if (wPoster) wPoster.src = match.poster;
-                addToWatchHistory(currentItem);
-              }
-              if (match.rating?.kinopoisk?.value) {
-                currentItem.rating_kp = match.rating.kinopoisk.value;
-              }
-              if (match.rating?.imdb?.value) {
-                currentItem.rating_imdb = match.rating.imdb.value;
-              }
-              if (match.rating?.tmdb?.value) {
-                currentItem.rating_tmdb = match.rating.tmdb.value;
-              }
-              document.getElementById("watchRating").innerText = formatSidebarRating(currentItem);
-              break;
-            }
-          }
+    players.forEach((player, idx) => {
+      const btn = document.createElement("button");
+      btn.className = `item-btn ${idx === selectedBalancerIndex ? 'active' : ''}`;
+      btn.innerText = `[ ${player.type} ]`;
+      btn.onclick = () => {
+        selectedBalancerIndex = idx;
+        document.querySelectorAll("#primarySelectorList .item-btn").forEach(b => b.classList.remove("active"));
+        btn.classList.add("active");
+        if (currentItem) {
+          currentItem.last_provider = 'kinobox';
+          currentItem.last_balancer_index = idx;
+          currentItem.last_balancer_name = player.type;
+          addToWatchHistory(currentItem);
         }
-      }
+        setIframe(player.iframeUrl);
+      };
+      primaryList.appendChild(btn);
+    });
 
-      // 2. Стандартний запит до Kinobox Players API
-      const queryParams = {};
-      if (kpId) queryParams.kinopoisk = kpId;
-      if (currentItem.id) queryParams.tmdb = currentItem.id;
-      if (currentItem.title_en || currentItem.title) queryParams.title = currentItem.title_en || currentItem.title;
-
-      const playersData = await fetchKinobox('players', queryParams);
-      let players = [];
-      if (Array.isArray(playersData)) {
-        players = playersData;
-      } else if (playersData?.data && Array.isArray(playersData.data)) {
-        players = playersData.data;
-      } else if (playersData?.players && Array.isArray(playersData.players)) {
-        players = playersData.players;
-      }
-
-      // Якщо API не повернуло список балансерів — надаємо перевірені робочі балансери
-      if (!players || players.length === 0) {
-        const tmdbId = currentItem.id || '969681';
-        const kinopoiskId = kpId || currentItem.kp_id || '';
-        const isTv = (currentItem.type === 'tv' || currentItem.type === 'series');
-        players = [
-          { type: 'Collaps', iframeUrl: isTv ? `https://api.delivembed.cc/embed/tv/${kinopoiskId || tmdbId}/1/1` : `https://api.delivembed.cc/embed/movie/${kinopoiskId || tmdbId}` },
-          { type: 'Alloha', iframeUrl: `https://player.alloha.tv/?token=guest&kp=${kinopoiskId}&tmdb=${tmdbId}` },
-          { type: 'Videocdn', iframeUrl: `https://stream.voidboost.cc/embed/${kinopoiskId || tmdbId}` },
-          { type: 'Kinobox', iframeUrl: `https://kinobox.tv/embed.html?tmdb=${tmdbId}&kinopoisk=${kinopoiskId}` }
-        ];
-      }
-
-      primaryList.innerHTML = "";
-
-      players.forEach((player, idx) => {
-        const playerUrl = player.iframeUrl || player.iframe_url || player.url || player.link || player.src;
-        if (!playerUrl) return;
-
-        const btn = document.createElement("button");
-        btn.className = `item-btn ${idx === selectedBalancerIndex ? 'active' : ''}`;
-        btn.innerText = `[ ${player.type || 'Balancer ' + (idx + 1)} ]`;
-        btn.onclick = () => {
-          selectedBalancerIndex = idx;
-          document.querySelectorAll("#primarySelectorList .item-btn").forEach(b => b.classList.remove("active"));
-          btn.classList.add("active");
-          if (currentItem) {
-            currentItem.last_provider = 'kinobox';
-            currentItem.last_balancer_index = idx;
-            currentItem.last_balancer_name = player.type || ('Balancer ' + (idx + 1));
-            addToWatchHistory(currentItem);
-          }
-          setIframe(playerUrl);
-        };
-        primaryList.appendChild(btn);
-      });
-
-      if (reloadIframe && players.length > 0) {
-        const initialPlayer = players[selectedBalancerIndex] || players[0];
-        const initialUrl = initialPlayer?.iframeUrl || initialPlayer?.iframe_url || initialPlayer?.url || initialPlayer?.link || initialPlayer?.src;
-        if (initialUrl) {
-          setIframe(initialUrl);
-        }
-      }
-
-    } catch (err) {
-      console.error("Kinobox Balancers Load Error:", err);
-      const tmdbId = currentItem.id || '969681';
-      const kinopoiskId = kpId || currentItem.kp_id || '';
-      const isTv = (currentItem.type === 'tv' || currentItem.type === 'series');
-      const fallbackPlayers = [
-        { type: 'Collaps', iframeUrl: isTv ? `https://api.delivembed.cc/embed/tv/${kinopoiskId || tmdbId}/1/1` : `https://api.delivembed.cc/embed/movie/${kinopoiskId || tmdbId}` },
-        { type: 'Alloha', iframeUrl: `https://player.alloha.tv/?token=guest&kp=${kinopoiskId}&tmdb=${tmdbId}` },
-        { type: 'Videocdn', iframeUrl: `https://stream.voidboost.cc/embed/${kinopoiskId || tmdbId}` },
-        { type: 'Kinobox', iframeUrl: `https://kinobox.tv/embed.html?tmdb=${tmdbId}&kinopoisk=${kinopoiskId}` }
-      ];
-
-      primaryList.innerHTML = "";
-      fallbackPlayers.forEach((player, idx) => {
-        const btn = document.createElement("button");
-        btn.className = `item-btn ${idx === selectedBalancerIndex ? 'active' : ''}`;
-        btn.innerText = `[ ${player.type} ]`;
-        btn.onclick = () => {
-          selectedBalancerIndex = idx;
-          document.querySelectorAll("#primarySelectorList .item-btn").forEach(b => b.classList.remove("active"));
-          btn.classList.add("active");
-          if (currentItem) {
-            currentItem.last_provider = 'kinobox';
-            currentItem.last_balancer_index = idx;
-            addToWatchHistory(currentItem);
-          }
-          setIframe(player.iframeUrl);
-        };
-        primaryList.appendChild(btn);
-      });
-
-      if (reloadIframe && fallbackPlayers.length > 0) {
-        const initial = fallbackPlayers[selectedBalancerIndex] || fallbackPlayers[0];
-        setIframe(initial.iframeUrl);
+    if (reloadIframe && players.length > 0) {
+      const initialPlayer = players[selectedBalancerIndex] || players[0];
+      if (initialPlayer && initialPlayer.iframeUrl) {
+        setIframe(initialPlayer.iframeUrl);
       }
     }
   } else {
