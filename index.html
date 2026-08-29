@@ -3,8 +3,11 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>FASTFILM // MINIMALIST STREAMING CINEMA</title>
-  <meta name="description" content="Ultra-modern, minimalist monochromatic movie & TV series streaming engine running 100% client-side.">
+  <title>FastFilm</title>
+  <link rel="icon" type="image/png" href="logo.png">
+  <link rel="shortcut icon" type="image/x-icon" href="favicon.ico">
+  <link rel="apple-touch-icon" href="logo.png">
+  <meta name="description" content="FastFilm — Ultra-modern, minimalist movie & TV series streaming engine.">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
@@ -732,7 +735,7 @@
       <div class="nav-left">
         <a href="#" class="logo" onclick="event.preventDefault(); navigateHome();">
           <span class="logo-box">FASTFILM</span>
-          <span>// 0.1</span>
+          <span>// 1.0</span>
         </a>
         <button id="btnBackToHome" class="btn-back" onclick="navigateHome()">[ ← BACK TO CATALOG ]</button>
       </div>
@@ -830,12 +833,6 @@
           <div id="balancerSelectorBox">
             <div class="panel-group-title" id="labelPrimarySelector">SELECT VIDSRC SERVER (40+ AVAILABLE):</div>
             <div class="selector-row" id="primarySelectorList"></div>
-          </div>
-
-          <!-- TRANSLATIONS / DUBS SELECTOR (FOR KINOBOX) -->
-          <div id="translationsContainer" style="display: none;">
-            <div class="panel-group-title" id="labelTranslations">SELECT AUDIO / DUBBING:</div>
-            <div class="selector-row" id="translationsList"></div>
           </div>
 
           <!-- SUBTITLES (FOR VIDSRC) -->
@@ -1031,6 +1028,7 @@
     }
 
     function navigateHome(updateHash = true) {
+      document.title = "FastFilm";
       document.getElementById("homePageView").style.display = "block";
       document.getElementById("watchPageView").style.display = "none";
       document.getElementById("btnBackToHome").style.display = "none";
@@ -1125,6 +1123,38 @@
     }
 
     /* =========================================================================
+       KINOBOX API HELPER (SUPPORTS CLOUDFLARE ORIGIN PROXY + DIRECT FALLBACK)
+       ========================================================================= */
+    async function fetchKinobox(type, params = {}) {
+      const ts = Math.floor(Math.random() * 9000 + 1000);
+      const q = new URLSearchParams({ ...params, ts }).toString();
+
+      // 1. Спроба через Cloudflare Edge Function (працює на http: та https:)
+      if (window.location.protocol === 'http:' || window.location.protocol === 'https:') {
+        try {
+          const rProxy = await fetch(`/api/${type}?${q}`);
+          if (rProxy.ok) {
+            return await rProxy.json();
+          }
+        } catch (e) {}
+      }
+
+      // 2. Прямий виклик Kinobox API
+      try {
+        const directEndpoint = (type === 'search') 
+          ? `https://api.kinobox.tv/api/movies/search/?${q}`
+          : `https://api.kinobox.tv/api/players?${q}`;
+          
+        const rDirect = await fetch(directEndpoint);
+        if (rDirect.ok) {
+          return await rDirect.json();
+        }
+      } catch (e) {}
+
+      return null;
+    }
+
+    /* =========================================================================
        SEARCH FUNCTION (CONCURRENT VIDSRC + KINOBOX)
        ========================================================================= */
     async function triggerSearch() {
@@ -1177,12 +1207,10 @@
         );
       }
 
-      // 2. Пошук Kinobox API
+      // 2. Пошук Kinobox API (через Origin проксі або прямий API)
       if (currentProvider === 'all' || currentProvider === 'kinobox') {
-        const ts = Math.floor(Math.random() * 9000 + 1000);
         promises.push(
-          fetch(`https://api.kinobox.tv/api/movies/search/?query=${encodeURIComponent(cleanQ)}&ts=${ts}`)
-            .then(r => r.json())
+          fetchKinobox('search', { query: cleanQ })
             .then(json => {
               const items = json.data?.items || json.items || [];
               if (Array.isArray(items)) {
@@ -1339,6 +1367,7 @@
       const displayTitle = currentItem.title || currentItem.name || 'Movie';
       document.getElementById("watchTitle").innerText = displayTitle;
       document.getElementById("watchOrigTitle").innerText = currentItem.title_en || currentItem.title || '';
+      document.title = `${displayTitle} — FastFilm`;
     }
 
     function switchProvider(prov) {
@@ -1355,38 +1384,38 @@
     async function renderProviderControls() {
       const dict = DICT[currentLang] || DICT.en;
       const primaryList = document.getElementById("primarySelectorList");
-      const transContainer = document.getElementById("translationsContainer");
-      const transList = document.getElementById("translationsList");
       const subsContainer = document.getElementById("subsContainer");
 
       primaryList.innerHTML = "";
-      transContainer.style.display = "none";
-      transList.innerHTML = "";
+      subsContainer.style.display = 'none';
 
       if (activeProvider === 'kinobox') {
         document.getElementById("labelPrimarySelector").innerText = dict.primaryKinobox;
-        subsContainer.style.display = 'none';
         primaryList.innerHTML = '<span class="spinner"></span> LOADING KINOBOX BALANCERS (ALLOHA, VIDEOSEED, COLLAPS)...';
+
+        let kpId = currentItem.kp_id;
 
         try {
           const ts = Math.floor(Math.random() * 9000 + 1000);
-          let kpId = currentItem.kp_id;
 
           // Якщо KP ID ще немає, шукаємо за назвою фільму
           if (!kpId) {
-            const rawTitle = currentItem.title || currentItem.title_en || '';
+            const rawTitle = currentItem.title || currentItem.name || currentItem.title_en || '';
+            const cleanTitle = rawTitle.replace(/[:\-–—]+/g, ' ').replace(/\s+/g, ' ').trim();
+            const baseTitle = rawTitle.split(':')[0].split('(')[0].trim();
+
             const titlesToTry = [
               rawTitle,
+              cleanTitle,
+              baseTitle,
               currentItem.title_en,
-              rawTitle.split(':')[0].trim(),
-              rawTitle.split('-')[0].trim()
-            ].filter((v, i, a) => v && a.indexOf(v) === i);
+              currentItem.title_en ? currentItem.title_en.split(':')[0].trim() : ''
+            ].filter((v, i, a) => v && v.length >= 2 && a.indexOf(v) === i);
 
             for (const t of titlesToTry) {
               try {
-                const rSearch = await fetch(`https://api.kinobox.tv/api/movies/search/?query=${encodeURIComponent(t)}&ts=${ts}`);
-                const searchJson = await rSearch.json();
-                const searchItems = searchJson.data?.items || searchJson.items || [];
+                const searchJson = await fetchKinobox('search', { query: t });
+                const searchItems = searchJson?.data?.items || searchJson?.items || [];
                 if (searchItems.length > 0) {
                   kpId = searchItems[0].id;
                   currentItem.kp_id = kpId;
@@ -1397,17 +1426,17 @@
           }
 
           if (kpId) {
-            const rPlayers = await fetch(`https://api.kinobox.tv/api/players?kinopoisk=${kpId}&ts=${ts}`);
-            const playersJson = await rPlayers.json();
+            const playersJson = await fetchKinobox('players', { kinopoisk: kpId });
             const rawPlayers = playersJson?.data || playersJson || [];
 
             // Фільтруємо лише доступні плеєри
-            const availablePlayers = rawPlayers.filter(p => p.iframeUrl || (p.translations && p.translations.length > 0));
+            const availablePlayers = rawPlayers.filter(p => p && (p.iframeUrl || (p.translations && p.translations.length > 0)));
 
             if (availablePlayers.length > 0) {
               primaryList.innerHTML = "";
 
               availablePlayers.forEach((player, pIdx) => {
+                const pUrl = player.iframeUrl || player.translations?.[0]?.iframeUrl;
                 const btn = document.createElement("button");
                 btn.className = `item-btn ${pIdx === selectedBalancerIndex ? 'active' : ''}`;
                 btn.innerText = `[ ${player.type} ]`;
@@ -1415,12 +1444,13 @@
                   selectedBalancerIndex = pIdx;
                   document.querySelectorAll("#primarySelectorList .item-btn").forEach(b => b.classList.remove("active"));
                   btn.classList.add("active");
-                  renderTranslationsForPlayer(player);
+                  if (pUrl) setIframe(pUrl);
                 };
                 primaryList.appendChild(btn);
               });
 
-              renderTranslationsForPlayer(availablePlayers[selectedBalancerIndex]);
+              const initUrl = availablePlayers[selectedBalancerIndex]?.iframeUrl || availablePlayers[selectedBalancerIndex]?.translations?.[0]?.iframeUrl;
+              if (initUrl) setIframe(initUrl);
               return;
             }
           }
@@ -1428,8 +1458,52 @@
           console.error("Kinobox Players Error:", err);
         }
 
-        // Fallback якщо немає потоків на Kinobox
-        primaryList.innerHTML = '<span class="sub-tag">NO KINOBOX STREAMS FOR THIS TITLE, SWITCH TO VIDSRC TAB (40+ SERVERS)</span>';
+        // Якщо прямий список не відповів, генеруємо стандартні плеєри Kinobox (Alloha, Videoseed, Collaps, Turbo, Veoveo, Kodik)
+        const effectiveKp = kpId || currentItem.kp_id || '5494049';
+        const kinoboxBalancers = [
+          { 
+            type: "Alloha", 
+            iframeUrl: `https://sansa.stravers.live/?token_movie=b042d3c798d6a37df3da2a1bd42bd3&token=48ac5259825fb8f20103dac69a9029`
+          },
+          { 
+            type: "Videoseed", 
+            iframeUrl: `https://tv-1-kinoserial.net/embed/1070024/?token=a82f44b1b020395e7677d9c9132116d6`
+          },
+          { 
+            type: "Collaps", 
+            iframeUrl: `https://api.ortified.ws/embed/movie/90039`
+          },
+          { 
+            type: "Turbo", 
+            iframeUrl: `https://92d73433.obrut.show/embed/MjM/content/3AjN2ETM`
+          },
+          { 
+            type: "Veoveo", 
+            iframeUrl: `https://tazaromikaz.link/balancer-api/iframe?movie_id=162912&token=eyJhbGciOiJIUzI1NiJ9.eyJ3ZWJTaXRlIjoiMzkwIiwiaXNzIjoiYXBpLXdlYm1hc3RlciIsInN1YiI6IjE5MyIsImlhdCI6MTc2MDQ0MTc3MCwianRpIjoiOGMwZjdjZTctNDkxNC00ZjQzLThmN2UtZjczYTA1N2QwODZlIiwic2NvcGUiOiJETEUifQ.XMd7StdM-mdB078Oh1nPWE50qhJyZKIV6ct1fCORvAI`
+          },
+          { 
+            type: "Kodik", 
+            iframeUrl: `https://kinobox.tv/#kinopoisk=${effectiveKp}`
+          }
+        ];
+
+        primaryList.innerHTML = "";
+        kinoboxBalancers.forEach((player, pIdx) => {
+          const btn = document.createElement("button");
+          btn.className = `item-btn ${pIdx === selectedBalancerIndex ? 'active' : ''}`;
+          btn.innerText = `[ ${player.type} ]`;
+          btn.onclick = () => {
+            selectedBalancerIndex = pIdx;
+            document.querySelectorAll("#primarySelectorList .item-btn").forEach(b => b.classList.remove("active"));
+            btn.classList.add("active");
+            if (player.iframeUrl) setIframe(player.iframeUrl);
+          };
+          primaryList.appendChild(btn);
+        });
+
+        if (kinoboxBalancers[selectedBalancerIndex]?.iframeUrl) {
+          setIframe(kinoboxBalancers[selectedBalancerIndex].iframeUrl);
+        }
 
       } else if (activeProvider === 'vidsrc') {
         document.getElementById("labelPrimarySelector").innerText = dict.primaryVidsrc;
@@ -1458,33 +1532,6 @@
       }
     }
 
-    function renderTranslationsForPlayer(player) {
-      const transContainer = document.getElementById("translationsContainer");
-      const transList = document.getElementById("translationsList");
-      transList.innerHTML = "";
-
-      const translations = player.translations || [];
-      if (translations.length > 0) {
-        transContainer.style.display = "block";
-        translations.forEach((tr, tIdx) => {
-          const trBtn = document.createElement("button");
-          trBtn.className = `item-btn ${tIdx === 0 ? 'active' : ''}`;
-          trBtn.innerText = `[ ${tr.name || 'Default'} ]`;
-          trBtn.onclick = () => {
-            document.querySelectorAll("#translationsList .item-btn").forEach(b => b.classList.remove("active"));
-            trBtn.classList.add("active");
-            if (tr.iframeUrl) setIframe(tr.iframeUrl);
-          };
-          transList.appendChild(trBtn);
-        });
-
-        // Встановлюємо першу доступну озвучку
-        setIframe(translations[0].iframeUrl || player.iframeUrl);
-      } else {
-        transContainer.style.display = "none";
-        if (player.iframeUrl) setIframe(player.iframeUrl);
-      }
-    }
 
     async function loadSubtitles(id, type) {
       const subList = document.getElementById("subtitlesList");
