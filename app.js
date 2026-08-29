@@ -141,6 +141,7 @@ let DICT = {
     adblockTitle: "Enable an AdBlocker for a Clean Experience",
     adblockDesc: "Third-party video streaming servers may display intrusive popups and casino redirects. We strongly recommend installing AdBlock or using Brave Browser for uninterrupted, ad-free playback.",
     adblockInstall: "[ GET ADBLOCK ]",
+    adblockBtnHeader: "[ ADBLOCK ]",
     adblockClose: "[ CONTINUE ]",
     adblockDontShow: "[ DON'T REMIND AGAIN ]"
   },
@@ -181,6 +182,7 @@ let DICT = {
     adblockTitle: "Увімкніть AdBlocker для чистого перегляду без реклами",
     adblockDesc: "Сторонні стрімінг-сервери можуть показувати нав'язливу спливаючу рекламу та казино-редиректи при кліку на Play. Рекомендуємо встановити розширення AdBlock або використовувати браузер Brave для максимального захисту.",
     adblockInstall: "[ ВСТАНОВИТИ ADBLOCK ]",
+    adblockBtnHeader: "[ ADBLOCK ]",
     adblockClose: "[ ПРОДОВЖИТИ ]",
     adblockDontShow: "[ БІЛЬШЕ НЕ НАГАДУВАТИ ]"
   }
@@ -428,6 +430,8 @@ function changeLanguage(lang) {
   if (watchSources) watchSources.innerText = dict.sourcesVal;
 
   document.getElementById("btnBackToHome").innerText = dict.back;
+  const btnHeadAd = document.getElementById("btnHeaderAdblock");
+  if (btnHeadAd) btnHeadAd.innerText = dict.adblockBtnHeader || "[ ADBLOCK ]";
   const playBtn = document.getElementById("heroPlayBtn");
   if (playBtn) playBtn.innerText = dict.play;
 
@@ -1194,6 +1198,10 @@ async function loadSubtitles(id, type) {
     const seenCounts = {};
     subs.forEach(s => {
       const rawLbl = (s.label || s.language || s.lang || 'SUB').trim();
+      const lower = rawLbl.toLowerCase();
+      // Виключаємо польську та російську
+      if (lower.includes('rus') || lower.includes('рос') || lower.includes('рус') || lower.includes('pol') || lower.includes('пол')) return;
+
       const fileUrl = s.file || s.url || '#';
       seenCounts[rawLbl] = (seenCounts[rawLbl] || 0) + 1;
 
@@ -1221,18 +1229,6 @@ function setIframe(url) {
   iframe.removeAttribute("sandbox");
   iframe.src = url;
 }
-
-// Глобальне перехоплення спливаючих вікон казино
-try {
-  const originalWindowOpen = window.open;
-  window.open = function(url, target, features) {
-    if (isAdShieldActive) {
-      console.warn("[FastFilm Ad-Shield] Blocked popup attempt to:", url);
-      return null;
-    }
-    return originalWindowOpen.apply(this, arguments);
-  };
-} catch (e) {}
 
 /* =========================================================================
    AD-BLOCKER RECOMMENDATION DETECTOR

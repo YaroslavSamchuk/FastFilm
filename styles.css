@@ -97,6 +97,34 @@ header {
   border-color: var(--border-focus);
 }
 
+.nav-actions {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.btn-header-adblock {
+  background: var(--text);
+  color: var(--bg);
+  border: 1px solid var(--text);
+  font-family: var(--font-mono);
+  font-size: 11px;
+  font-weight: 600;
+  padding: 6px 12px;
+  cursor: pointer;
+  text-decoration: none;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  white-space: nowrap;
+  transition: all 0.15s ease;
+}
+
+.btn-header-adblock:hover {
+  background: transparent;
+  color: var(--text);
+}
+
 .lang-select {
   background: var(--surface);
   border: 1px solid var(--border);
@@ -748,6 +776,10 @@ footer {
   font-weight: 600;
   padding: 8px 16px;
   cursor: pointer;
+  text-decoration: none;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
   transition: all 0.15s ease;
 }
 

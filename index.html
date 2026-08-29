@@ -23,12 +23,13 @@
       <div class="nav-left">
         <a href="#" class="logo" onclick="event.preventDefault(); navigateHome();">
           <span class="logo-box">FASTFILM</span>
-          <span>// 1.3</span>
+          <span>// 1.5</span>
         </a>
         <button id="btnBackToHome" class="btn-back" onclick="navigateHome()">[ ← BACK TO CATALOG ]</button>
       </div>
 
       <div class="nav-actions">
+        <button class="btn-header-adblock" id="btnHeaderAdblock" onclick="showAdblockModal()">[ ADBLOCK ]</button>
         <select id="langSelect" class="lang-select" onchange="changeLanguage(this.value)">
           <option value="en" selected>[ EN ] ENGLISH</option>
           <option value="uk">[ UK ] УКРАЇНСЬКА</option>
@@ -184,7 +185,7 @@
         Third-party video streaming servers may display intrusive popups and casino redirects. We strongly recommend installing uBlock Origin or using Brave Browser for uninterrupted, ad-free playback.
       </p>
       <div class="adblock-modal-actions">
-        <button class="adblock-btn-primary" id="btnAdblockInstall" onclick="window.open('https://chromewebstore.google.com/detail/adblock-%E2%80%94-block-ads-acros/gighmmpiobklfepjocnamgkkbiglidom', '_blank'); closeAdblockModal(false);">[ GET ADBLOCK ]</button>
+        <a href="https://chromewebstore.google.com/detail/adblock-%E2%80%94-block-ads-acros/gighmmpiobklfepjocnamgkkbiglidom" target="_blank" rel="noopener noreferrer" class="adblock-btn-primary" id="btnAdblockInstall" onclick="closeAdblockModal(false)">[ GET ADBLOCK ]</a>
         <button class="adblock-btn-secondary" id="btnAdblockClose" onclick="closeAdblockModal(false)">[ CONTINUE ]</button>
         <button class="adblock-btn-secondary" id="btnAdblockDontShow" onclick="closeAdblockModal(true)">[ DON'T REMIND AGAIN ]</button>
       </div>
