@@ -773,7 +773,7 @@
   <!-- FOOTER -->
   <footer class="border-t">
     <div class="container footer-inner">
-      <span>FASTFILM ENGINE // 100% CLIENT-SIDE GITHUB PAGES READY</span>
+      <span>FASTFILM ENGINE // 100% CLIENT-SIDE GITHUB & CLOUDFLARE READY</span>
       <span>40+ SERVERS • MULTI-BALANCERS • 50+ SUBTITLES</span>
     </div>
   </footer>
@@ -959,7 +959,8 @@
     async function loadBrowseCatalog() {
       try {
         const res = await fetch("https://moviepire.co/browse");
-        browseData = await res.json();
+        const json = await res.json();
+        browseData = json.data || json; // Handle { success: true, data: { hero, collections } }
 
         if (browseData.hero) {
           const hero = browseData.hero;
@@ -1012,12 +1013,12 @@
        SEARCH FUNCTION (CLIENT-SIDE FETCH)
        ========================================================================= */
     async function triggerSearch() {
-      const q = document.getElementById("searchInput").value.trim();
+      const rawQ = document.getElementById("searchInput").value.trim();
       const searchSec = document.getElementById("searchResultsSection");
       const browseSec = document.getElementById("collectionsContainer");
       const heroSec = document.getElementById("heroSection");
 
-      if (!q) {
+      if (!rawQ) {
         searchSec.style.display = "none";
         browseSec.style.display = "block";
         if (heroSec.querySelector("img").src) heroSec.style.display = "flex";
@@ -1031,12 +1032,23 @@
       const grid = document.getElementById("searchGrid");
       grid.innerHTML = '<div style="grid-column: 1/-1; padding: 40px 0; color: var(--text-muted); font-family: var(--font-mono);"><span class="spinner"></span> SEARCHING...</div>';
 
+      const cleanQ = rawQ.replace(/[\-_/\\:]+/g, " ").trim();
+
       try {
-        const res = await fetch(`https://moviepire.co/search?q=${encodeURIComponent(q)}`);
-        const results = await res.json();
+        const res = await fetch(`https://moviepire.co/search?q=${encodeURIComponent(cleanQ)}`);
+        const json = await res.json();
+        
+        // Handle { success: true, data: [...] } or direct array
+        let items = [];
+        if (json.data && Array.isArray(json.data)) {
+          items = json.data;
+        } else if (Array.isArray(json)) {
+          items = json;
+        } else if (json.results && Array.isArray(json.results)) {
+          items = json.results;
+        }
 
         grid.innerHTML = "";
-        const items = Array.isArray(results) ? results : (results.results || []);
         document.getElementById("searchStats").innerText = `${items.length} ITEMS FOUND`;
 
         if (items.length === 0) {
@@ -1163,12 +1175,12 @@
         document.getElementById("labelPrimarySelector").innerText = dict.primaryKinobox;
         subsContainer.style.display = 'none';
 
-        // Kinobox Balancers
+        const movieTitle = currentItem.title || currentItem.name || '';
         const kinoboxBalancers = [
-          { name: "Alloha", url: `https://api.alloha.tv/?token=0&title=${encodeURIComponent(currentItem.title || '')}` },
-          { name: "Kinobox Core", url: `https://kinobox.tv/#${encodeURIComponent(currentItem.title || '')}` },
-          { name: "Collaps", url: `https://kinobox.tv/#${encodeURIComponent(currentItem.title || '')}` },
-          { name: "Videoseed", url: `https://kinobox.tv/#${encodeURIComponent(currentItem.title || '')}` }
+          { name: "Kinobox Core", url: `https://kinobox.tv/#${encodeURIComponent(movieTitle)}` },
+          { name: "Alloha", url: `https://api.alloha.tv/?token=0&title=${encodeURIComponent(movieTitle)}` },
+          { name: "Collaps", url: `https://kinobox.tv/#${encodeURIComponent(movieTitle)}` },
+          { name: "Videoseed", url: `https://kinobox.tv/#${encodeURIComponent(movieTitle)}` }
         ];
 
         kinoboxBalancers.forEach((pl, idx) => {
