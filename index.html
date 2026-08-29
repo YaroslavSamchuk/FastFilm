@@ -624,8 +624,103 @@
       animation: spin 0.6s linear infinite;
     }
 
-    @keyframes spin {
-      to { transform: rotate(360deg); }
+    /* ADBLOCK MODAL NOTIFICATION */
+    .adblock-modal-overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(9, 9, 11, 0.88);
+      backdrop-filter: blur(10px);
+      z-index: 9999;
+      display: none;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+    }
+
+    .adblock-modal-box {
+      background: var(--surface);
+      border: 1px solid var(--text);
+      max-width: 520px;
+      width: 100%;
+      padding: 24px;
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+      box-shadow: 0 20px 40px rgba(0,0,0,0.8);
+      animation: modalSlide 0.2s ease-out;
+    }
+
+    @keyframes modalSlide {
+      from { transform: translateY(12px); opacity: 0; }
+      to { transform: translateY(0); opacity: 1; }
+    }
+
+    .adblock-modal-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      border-bottom: 1px solid var(--border);
+      padding-bottom: 12px;
+    }
+
+    .adblock-tag {
+      font-family: var(--font-mono);
+      font-size: 11px;
+      font-weight: 600;
+      color: #ef4444;
+      letter-spacing: 0.08em;
+    }
+
+    .adblock-modal-title {
+      font-size: 16px;
+      font-weight: 700;
+      color: var(--text);
+    }
+
+    .adblock-modal-desc {
+      font-size: 13px;
+      color: var(--text-dim);
+      line-height: 1.6;
+    }
+
+    .adblock-modal-actions {
+      display: flex;
+      gap: 10px;
+      justify-content: flex-end;
+      margin-top: 8px;
+    }
+
+    .adblock-btn-primary {
+      background: var(--text);
+      color: var(--bg);
+      border: 1px solid var(--text);
+      font-family: var(--font-mono);
+      font-size: 11px;
+      font-weight: 600;
+      padding: 8px 16px;
+      cursor: pointer;
+      transition: all 0.15s ease;
+    }
+
+    .adblock-btn-primary:hover {
+      background: transparent;
+      color: var(--text);
+    }
+
+    .adblock-btn-secondary {
+      background: transparent;
+      color: var(--text-muted);
+      border: 1px solid var(--border);
+      font-family: var(--font-mono);
+      font-size: 11px;
+      padding: 8px 14px;
+      cursor: pointer;
+      transition: all 0.15s ease;
+    }
+
+    .adblock-btn-secondary:hover {
+      color: var(--text);
+      border-color: var(--border-focus);
     }
   </style>
 </head>
@@ -735,6 +830,12 @@
           <div id="balancerSelectorBox">
             <div class="panel-group-title" id="labelPrimarySelector">SELECT VIDSRC SERVER (40+ AVAILABLE):</div>
             <div class="selector-row" id="primarySelectorList"></div>
+          </div>
+
+          <!-- TRANSLATIONS / DUBS SELECTOR (FOR KINOBOX) -->
+          <div id="translationsContainer" style="display: none;">
+            <div class="panel-group-title" id="labelTranslations">SELECT AUDIO / DUBBING:</div>
+            <div class="selector-row" id="translationsList"></div>
           </div>
 
           <!-- SUBTITLES (FOR VIDSRC) -->
@@ -872,21 +973,33 @@
         placeholder: "Search movies, TV series, directors, anime...",
         execute: "EXECUTE",
         results: "[ SEARCH RESULTS ]",
-        primaryKinobox: "SELECT BALANCER / PLAYER (INTERNAL DUBS & SEASONS):",
+        primaryKinobox: "SELECT KINOBOX BALANCER (ALLOHA, COLLAPS, VIDEOSEED ETC):",
         primaryVidsrc: "SELECT VIDSRC SERVER (40+ AVAILABLE):",
+        translations: "SELECT AUDIO / DUBBING:",
         subs: "AVAILABLE SUBTITLES (50+ LANGUAGES):",
         back: "[ ← BACK TO CATALOG ]",
-        play: "[ ▶ PLAY NOW ]"
+        play: "[ ▶ PLAY NOW ]",
+        adblockTag: "[ AD-BLOCKER DETECTED // SYSTEM NOTICE ]",
+        adblockTitle: "Please disable your AdBlocker for video playback",
+        adblockDesc: "Some video streaming servers (VidSrc 40+ & Balancers) might fail to load if an AdBlocker is active. To ensure uninterrupted playback, please add this site to your AdBlock whitelist or pause your extension.",
+        adblockClose: "[ ✕ I UNDERSTAND / CLOSE ]",
+        adblockDontShow: "[ DON'T SHOW AGAIN ]"
       },
       uk: {
         placeholder: "Пошук фільмів, серіалів, режисерів, аніме...",
         execute: "ВИКОНАТИ",
         results: "[ РЕЗУЛЬТАТИ ПОШУКУ ]",
-        primaryKinobox: "ВИБЕРІТЬ БАЛАНСЕР / ПЛЕЄР (ОЗВУЧКИ ТА СЕРІЇ ВСЕРЕДИНІ):",
+        primaryKinobox: "ВИБЕРІТЬ БАЛАНСЕР KINOBOX (ALLOHA, COLLAPS, VIDEOSEED ТА ІН):",
         primaryVidsrc: "ВИБЕРІТЬ СЕРВЕР VIDSRC (40+ ДОСТУПНИХ):",
+        translations: "ВИБЕРІТЬ ОЗВУЧКУ / ДУБЛЯЖ:",
         subs: "ДОСТУПНІ СУБТИТРИ (50+ МОВ):",
         back: "[ ← НАЗАД ДО КАТАЛОГУ ]",
-        play: "[ ▶ ДИВИТИСЯ ЗАРАЗ ]"
+        play: "[ ▶ ДИВИТИСЯ ЗАРАЗ ]",
+        adblockTag: "[ ВИЯВЛЕНО AD-BLOCKER // СИСТЕМНЕ ПОВІДОМЛЕННЯ ]",
+        adblockTitle: "Будь ласка, вимкніть AdBlock для коректного відтворення",
+        adblockDesc: "Деякі відеоплеєри та балансери можуть не завантажуватися через активний блокувальник реклами (AdBlock/uBlock). Щоб відео запускалося без помилок, будь ласка, додайте сайт у винятки або тимчасово вимкніть розширення.",
+        adblockClose: "[ ✕ ЗРОЗУМІЛО / ЗАКРИТИ ]",
+        adblockDontShow: "[ БІЛЬШЕ НЕ ПОКАЗУВАТИ ]"
       }
     };
 
@@ -895,6 +1008,7 @@
        ========================================================================= */
     document.addEventListener("DOMContentLoaded", () => {
       handleRoute();
+      detectAdBlock();
 
       window.addEventListener("hashchange", () => {
         handleRoute();
@@ -942,6 +1056,7 @@
       document.getElementById("searchInput").placeholder = dict.placeholder;
       document.getElementById("btnSearch").innerText = dict.execute;
       document.getElementById("labelSubs").innerText = dict.subs;
+      document.getElementById("labelTranslations").innerText = dict.translations;
       document.getElementById("btnBackToHome").innerText = dict.back;
       const playBtn = document.getElementById("heroPlayBtn");
       if (playBtn) playBtn.innerText = dict.play;
@@ -960,7 +1075,7 @@
       try {
         const res = await fetch("https://moviepire.co/browse");
         const json = await res.json();
-        browseData = json.data || json; // Handle { success: true, data: { hero, collections } }
+        browseData = json.data || json;
 
         if (browseData.hero) {
           const hero = browseData.hero;
@@ -1010,7 +1125,7 @@
     }
 
     /* =========================================================================
-       SEARCH FUNCTION (CLIENT-SIDE FETCH)
+       SEARCH FUNCTION (CONCURRENT VIDSRC + KINOBOX)
        ========================================================================= */
     async function triggerSearch() {
       const rawQ = document.getElementById("searchInput").value.trim();
@@ -1030,39 +1145,79 @@
       searchSec.style.display = "block";
 
       const grid = document.getElementById("searchGrid");
-      grid.innerHTML = '<div style="grid-column: 1/-1; padding: 40px 0; color: var(--text-muted); font-family: var(--font-mono);"><span class="spinner"></span> SEARCHING...</div>';
+      grid.innerHTML = '<div style="grid-column: 1/-1; padding: 40px 0; color: var(--text-muted); font-family: var(--font-mono);"><span class="spinner"></span> SEARCHING GLOBAL & KINOBOX DATABASES...</div>';
 
       const cleanQ = rawQ.replace(/[\-_/\\:]+/g, " ").trim();
+      let combined = [];
+      const promises = [];
 
-      try {
-        const res = await fetch(`https://moviepire.co/search?q=${encodeURIComponent(cleanQ)}`);
-        const json = await res.json();
-        
-        // Handle { success: true, data: [...] } or direct array
-        let items = [];
-        if (json.data && Array.isArray(json.data)) {
-          items = json.data;
-        } else if (Array.isArray(json)) {
-          items = json;
-        } else if (json.results && Array.isArray(json.results)) {
-          items = json.results;
-        }
-
-        grid.innerHTML = "";
-        document.getElementById("searchStats").innerText = `${items.length} ITEMS FOUND`;
-
-        if (items.length === 0) {
-          grid.innerHTML = '<div style="grid-column: 1/-1; padding: 40px 0; color: var(--text-muted); font-family: var(--font-mono);">[ NO ITEMS FOUND ]</div>';
-          return;
-        }
-
-        items.forEach(item => {
-          grid.appendChild(createCard(item));
-        });
-
-      } catch (err) {
-        grid.innerHTML = '<div style="grid-column: 1/-1; padding: 40px 0; color: var(--text-muted); font-family: var(--font-mono);">SEARCH ERROR</div>';
+      // 1. Пошук MoviePire / VidSrc
+      if (currentProvider === 'all' || currentProvider === 'vidsrc') {
+        promises.push(
+          fetch(`https://moviepire.co/search?q=${encodeURIComponent(cleanQ)}`)
+            .then(r => r.json())
+            .then(json => {
+              const items = json.data || json.results || json || [];
+              if (Array.isArray(items)) {
+                items.forEach(it => {
+                  combined.push({
+                    id: it.id,
+                    title: it.title || it.name || 'Movie',
+                    title_en: it.title || it.name || '',
+                    poster: it.poster || it.image,
+                    rating: it.rating,
+                    year: it.year || '',
+                    type: it.type || 'movie',
+                    provider: 'vidsrc'
+                  });
+                });
+              }
+            })
+            .catch(() => {})
+        );
       }
+
+      // 2. Пошук Kinobox API
+      if (currentProvider === 'all' || currentProvider === 'kinobox') {
+        const ts = Math.floor(Math.random() * 9000 + 1000);
+        promises.push(
+          fetch(`https://api.kinobox.tv/api/movies/search/?query=${encodeURIComponent(cleanQ)}&ts=${ts}`)
+            .then(r => r.json())
+            .then(json => {
+              const items = json.data?.items || json.items || [];
+              if (Array.isArray(items)) {
+                items.forEach(it => {
+                  combined.push({
+                    id: it.id,
+                    kp_id: it.id,
+                    title: it.title?.russian || it.title?.original || 'Film',
+                    title_en: it.title?.original || it.title?.russian || '',
+                    poster: it.gallery?.posterUrl,
+                    rating: it.rating?.kinopoisk?.value || '8.0',
+                    year: it.year || '',
+                    type: it.type === 'Series' ? 'series' : 'movie',
+                    provider: 'kinobox'
+                  });
+                });
+              }
+            })
+            .catch(() => {})
+        );
+      }
+
+      await Promise.all(promises);
+
+      grid.innerHTML = "";
+      document.getElementById("searchStats").innerText = `${combined.length} ITEMS FOUND`;
+
+      if (combined.length === 0) {
+        grid.innerHTML = '<div style="grid-column: 1/-1; padding: 40px 0; color: var(--text-muted); font-family: var(--font-mono);">[ NO ITEMS FOUND ]</div>';
+        return;
+      }
+
+      combined.forEach(item => {
+        grid.appendChild(createCard(item));
+      });
     }
 
     function createCard(item) {
@@ -1070,14 +1225,15 @@
       card.className = "movie-card";
       card.onclick = () => openWatchPage(item);
 
-      const posterSrc = item.poster || item.image || "https://images.unsplash.com/photo-1489599849927-2ee91cede3ba?w=400&q=80";
+      const posterSrc = item.poster || "https://images.unsplash.com/photo-1489599849927-2ee91cede3ba?w=400&q=80";
       const rating = item.rating ? (item.rating > 10 ? (item.rating/10).toFixed(1) : item.rating) : "8.0";
       const displayTitle = item.title || item.name || "Movie";
+      const provTag = item.provider === 'kinobox' ? '[KINOBOX BALANCERS]' : '[VIDSRC (40+)]';
 
       card.innerHTML = `
         <div class="poster-box">
           <img src="${posterSrc}" alt="${displayTitle}" class="poster-img" loading="lazy" onerror="this.src='https://images.unsplash.com/photo-1489599849927-2ee91cede3ba?w=400&q=80'" />
-          <span class="badge-provider">[VIDSRC (40+) • KINOBOX]</span>
+          <span class="badge-provider">${provTag}</span>
           <span class="badge-rating">★ ${rating}</span>
         </div>
         <div class="card-info">
@@ -1102,6 +1258,7 @@
     function openWatchPageFromParams(params) {
       const item = {
         id: params.get("id") || "969681",
+        kp_id: params.get("kp_id") || null,
         title: params.get("title") || "Movie",
         title_en: params.get("title") || "Movie",
         year: params.get("year") || "2026",
@@ -1121,29 +1278,60 @@
       window.scrollTo(0, 0);
 
       updateWatchSidebarTitles();
-      document.getElementById("watchPoster").src = item.poster || item.image || "https://images.unsplash.com/photo-1489599849927-2ee91cede3ba?w=400&q=80";
+      document.getElementById("watchPoster").src = item.poster || "https://images.unsplash.com/photo-1489599849927-2ee91cede3ba?w=400&q=80";
       document.getElementById("watchYear").innerText = item.year || '2026';
       document.getElementById("watchRating").innerText = item.rating ? `★ ${item.rating}` : '★ 8.0';
       document.getElementById("watchType").innerText = (item.type || 'MOVIE').toUpperCase();
       document.getElementById("watchSources").innerText = "VIDSRC (40+ SERVERS) • KINOBOX BALANCERS";
-      document.getElementById("watchSynopsis").innerText = item.description || item.overview || 'Loading streaming servers...';
+      document.getElementById("watchSynopsis").innerText = item.description || item.overview || 'Loading movie synopsis and details...';
       document.getElementById("primarySelectorList").innerHTML = '<span class="spinner"></span> LOADING...';
       document.getElementById("subtitlesList").innerHTML = '—';
 
       if (updateHash) {
         const queryParams = new URLSearchParams({
           id: item.id || '',
+          kp_id: item.kp_id || '',
           title: item.title || item.title_en || '',
           type: item.type || 'movie',
-          poster: item.poster || item.image || ''
+          poster: item.poster || ''
         });
         window.location.hash = `watch?${queryParams.toString()}`;
       }
 
-      activeProvider = (currentLang === 'uk') ? 'kinobox' : 'vidsrc';
+      activeProvider = (item.provider === 'kinobox' || currentLang === 'uk') ? 'kinobox' : 'vidsrc';
       selectedBalancerIndex = 0;
       switchProvider(activeProvider);
       loadSubtitles(item.id, item.type || 'movie');
+      loadMovieDetails(item.id, item.type || 'movie');
+    }
+
+    async function loadMovieDetails(id, type) {
+      if (!id) return;
+      const ep = (type === 'series' || type === 'tv') ? 'series' : 'movie';
+      try {
+        const res = await fetch(`https://moviepire.co/${ep}/${id}`);
+        const json = await res.json();
+        const data = json.data || json;
+        if (data) {
+          const desc = data.description || data.overview;
+          if (desc) {
+            document.getElementById("watchSynopsis").innerText = desc;
+          } else {
+            document.getElementById("watchSynopsis").innerText = "No extended synopsis available for this title.";
+          }
+          if (data.year) document.getElementById("watchYear").innerText = data.year;
+          if (data.rating) document.getElementById("watchRating").innerText = `★ ${data.rating}`;
+          if (data.title && !currentItem.title) {
+            currentItem.title = data.title;
+            updateWatchSidebarTitles();
+          }
+        }
+      } catch (err) {
+        const cur = document.getElementById("watchSynopsis").innerText;
+        if (!cur || cur.includes("Loading")) {
+          document.getElementById("watchSynopsis").innerText = "Full movie synopsis available via streaming players.";
+        }
+      }
     }
 
     function updateWatchSidebarTitles() {
@@ -1164,39 +1352,84 @@
       renderProviderControls();
     }
 
-    function renderProviderControls() {
+    async function renderProviderControls() {
       const dict = DICT[currentLang] || DICT.en;
       const primaryList = document.getElementById("primarySelectorList");
+      const transContainer = document.getElementById("translationsContainer");
+      const transList = document.getElementById("translationsList");
       const subsContainer = document.getElementById("subsContainer");
 
       primaryList.innerHTML = "";
+      transContainer.style.display = "none";
+      transList.innerHTML = "";
 
       if (activeProvider === 'kinobox') {
         document.getElementById("labelPrimarySelector").innerText = dict.primaryKinobox;
         subsContainer.style.display = 'none';
+        primaryList.innerHTML = '<span class="spinner"></span> LOADING KINOBOX BALANCERS (ALLOHA, VIDEOSEED, COLLAPS)...';
 
-        const movieTitle = currentItem.title || currentItem.name || '';
-        const kinoboxBalancers = [
-          { name: "Kinobox Core", url: `https://kinobox.tv/#${encodeURIComponent(movieTitle)}` },
-          { name: "Alloha", url: `https://api.alloha.tv/?token=0&title=${encodeURIComponent(movieTitle)}` },
-          { name: "Collaps", url: `https://kinobox.tv/#${encodeURIComponent(movieTitle)}` },
-          { name: "Videoseed", url: `https://kinobox.tv/#${encodeURIComponent(movieTitle)}` }
-        ];
+        try {
+          const ts = Math.floor(Math.random() * 9000 + 1000);
+          let kpId = currentItem.kp_id;
 
-        kinoboxBalancers.forEach((pl, idx) => {
-          const btn = document.createElement("button");
-          btn.className = `item-btn ${idx === selectedBalancerIndex ? 'active' : ''}`;
-          btn.innerText = `[ ${pl.name} ]`;
-          btn.onclick = () => {
-            selectedBalancerIndex = idx;
-            document.querySelectorAll("#primarySelectorList .item-btn").forEach(b => b.classList.remove("active"));
-            btn.classList.add("active");
-            setIframe(pl.url);
-          };
-          primaryList.appendChild(btn);
-        });
+          // Якщо KP ID ще немає, шукаємо за назвою фільму
+          if (!kpId) {
+            const rawTitle = currentItem.title || currentItem.title_en || '';
+            const titlesToTry = [
+              rawTitle,
+              currentItem.title_en,
+              rawTitle.split(':')[0].trim(),
+              rawTitle.split('-')[0].trim()
+            ].filter((v, i, a) => v && a.indexOf(v) === i);
 
-        setIframe(kinoboxBalancers[selectedBalancerIndex].url);
+            for (const t of titlesToTry) {
+              try {
+                const rSearch = await fetch(`https://api.kinobox.tv/api/movies/search/?query=${encodeURIComponent(t)}&ts=${ts}`);
+                const searchJson = await rSearch.json();
+                const searchItems = searchJson.data?.items || searchJson.items || [];
+                if (searchItems.length > 0) {
+                  kpId = searchItems[0].id;
+                  currentItem.kp_id = kpId;
+                  break;
+                }
+              } catch(e) {}
+            }
+          }
+
+          if (kpId) {
+            const rPlayers = await fetch(`https://api.kinobox.tv/api/players?kinopoisk=${kpId}&ts=${ts}`);
+            const playersJson = await rPlayers.json();
+            const rawPlayers = playersJson?.data || playersJson || [];
+
+            // Фільтруємо лише доступні плеєри
+            const availablePlayers = rawPlayers.filter(p => p.iframeUrl || (p.translations && p.translations.length > 0));
+
+            if (availablePlayers.length > 0) {
+              primaryList.innerHTML = "";
+
+              availablePlayers.forEach((player, pIdx) => {
+                const btn = document.createElement("button");
+                btn.className = `item-btn ${pIdx === selectedBalancerIndex ? 'active' : ''}`;
+                btn.innerText = `[ ${player.type} ]`;
+                btn.onclick = () => {
+                  selectedBalancerIndex = pIdx;
+                  document.querySelectorAll("#primarySelectorList .item-btn").forEach(b => b.classList.remove("active"));
+                  btn.classList.add("active");
+                  renderTranslationsForPlayer(player);
+                };
+                primaryList.appendChild(btn);
+              });
+
+              renderTranslationsForPlayer(availablePlayers[selectedBalancerIndex]);
+              return;
+            }
+          }
+        } catch (err) {
+          console.error("Kinobox Players Error:", err);
+        }
+
+        // Fallback якщо немає потоків на Kinobox
+        primaryList.innerHTML = '<span class="sub-tag">NO KINOBOX STREAMS FOR THIS TITLE, SWITCH TO VIDSRC TAB (40+ SERVERS)</span>';
 
       } else if (activeProvider === 'vidsrc') {
         document.getElementById("labelPrimarySelector").innerText = dict.primaryVidsrc;
@@ -1222,6 +1455,34 @@
         if (streams.length > 0) {
           setIframe(streams[0].iframe_url);
         }
+      }
+    }
+
+    function renderTranslationsForPlayer(player) {
+      const transContainer = document.getElementById("translationsContainer");
+      const transList = document.getElementById("translationsList");
+      transList.innerHTML = "";
+
+      const translations = player.translations || [];
+      if (translations.length > 0) {
+        transContainer.style.display = "block";
+        translations.forEach((tr, tIdx) => {
+          const trBtn = document.createElement("button");
+          trBtn.className = `item-btn ${tIdx === 0 ? 'active' : ''}`;
+          trBtn.innerText = `[ ${tr.name || 'Default'} ]`;
+          trBtn.onclick = () => {
+            document.querySelectorAll("#translationsList .item-btn").forEach(b => b.classList.remove("active"));
+            trBtn.classList.add("active");
+            if (tr.iframeUrl) setIframe(tr.iframeUrl);
+          };
+          transList.appendChild(trBtn);
+        });
+
+        // Встановлюємо першу доступну озвучку
+        setIframe(translations[0].iframeUrl || player.iframeUrl);
+      } else {
+        transContainer.style.display = "none";
+        if (player.iframeUrl) setIframe(player.iframeUrl);
       }
     }
 
@@ -1259,6 +1520,90 @@
     function setIframe(url) {
       document.getElementById("videoIframe").src = url;
     }
+
+    /* =========================================================================
+       ADBLOCK DETECTION LOGIC
+       ========================================================================= */
+    async function detectAdBlock() {
+      if (localStorage.getItem("fastfilm_adblock_dismissed") === "true") {
+        return;
+      }
+
+      let isBlocked = false;
+
+      // 1. Bait DOM Element Test
+      const bait = document.createElement("div");
+      bait.className = "adsbox ad-placement pub_300x250 pub_300x250m pub_728x90 text-ad textAd text_ad text_ads text-ads text-ad-links banner-ad";
+      bait.style.cssText = "position: absolute; top: -9999px; left: -9999px; width: 1px; height: 1px;";
+      document.body.appendChild(bait);
+
+      try {
+        if (
+          window.getComputedStyle(bait).getPropertyValue("display") === "none" ||
+          bait.offsetParent === null ||
+          bait.clientHeight === 0
+        ) {
+          isBlocked = true;
+        }
+      } catch (e) {
+        isBlocked = true;
+      }
+      bait.remove();
+
+      // 2. Bait Network Request Test
+      if (!isBlocked) {
+        try {
+          await fetch("https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js", {
+            method: "HEAD",
+            mode: "no-cors"
+          });
+        } catch (err) {
+          isBlocked = true;
+        }
+      }
+
+      if (isBlocked) {
+        setTimeout(showAdblockModal, 800);
+      }
+    }
+
+    function showAdblockModal() {
+      const dict = DICT[currentLang] || DICT.en;
+      document.getElementById("labelAdblockTag").innerText = dict.adblockTag;
+      document.getElementById("labelAdblockTitle").innerText = dict.adblockTitle;
+      document.getElementById("labelAdblockDesc").innerText = dict.adblockDesc;
+      document.getElementById("btnAdblockClose").innerText = dict.adblockClose;
+      document.getElementById("btnAdblockDontShow").innerText = dict.adblockDontShow;
+
+      const modal = document.getElementById("adblockModal");
+      if (modal) modal.style.display = "flex";
+    }
+
+    function closeAdblockModal(remember = false) {
+      if (remember) {
+        localStorage.setItem("fastfilm_adblock_dismissed", "true");
+      }
+      const modal = document.getElementById("adblockModal");
+      if (modal) modal.style.display = "none";
+    }
   </script>
+
+  <!-- ADBLOCK DETECTOR MODAL -->
+  <div id="adblockModal" class="adblock-modal-overlay">
+    <div class="adblock-modal-box">
+      <div class="adblock-modal-header">
+        <span class="adblock-tag" id="labelAdblockTag">[ AD-BLOCKER DETECTED // SYSTEM NOTICE ]</span>
+        <button class="adblock-btn-secondary" onclick="closeAdblockModal(false)" style="padding: 2px 8px; font-size: 11px;">✕</button>
+      </div>
+      <h3 class="adblock-modal-title" id="labelAdblockTitle">Please disable your AdBlocker for video playback</h3>
+      <p class="adblock-modal-desc" id="labelAdblockDesc">
+        Some video streaming servers (VidSrc 40+ & Balancers) might fail to load if an AdBlocker is active. To ensure uninterrupted playback, please add this site to your AdBlock whitelist or pause your extension.
+      </p>
+      <div class="adblock-modal-actions">
+        <button class="adblock-btn-secondary" id="btnAdblockDontShow" onclick="closeAdblockModal(true)">[ DON'T SHOW AGAIN ]</button>
+        <button class="adblock-btn-primary" id="btnAdblockClose" onclick="closeAdblockModal(false)">[ ✕ I UNDERSTAND / CLOSE ]</button>
+      </div>
+    </div>
+  </div>
 </body>
 </html>
