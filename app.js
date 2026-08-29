@@ -435,15 +435,22 @@ function changeLanguage(lang) {
   const playBtn = document.getElementById("heroPlayBtn");
   if (playBtn) playBtn.innerText = dict.play;
 
+  // Автоматично повертаємо опис фільму до оригіналу та скидаємо кнопку при зміні мови
+  const synopsisEl = document.getElementById("watchSynopsis");
+  if (currentOriginalSynopsis && synopsisEl && !currentOriginalSynopsis.includes("Loading")) {
+    synopsisEl.innerText = currentOriginalSynopsis;
+    isSynopsisTranslated = false;
+    currentTranslatedSynopsis = null;
+  }
+
   const btnTr = document.getElementById("btnTranslateSynopsis");
   if (btnTr) {
+    btnTr.classList.remove("active");
     if (lang === 'en' || lang.startsWith('en')) {
       btnTr.style.display = 'none';
     } else {
       btnTr.style.display = 'inline-block';
-      if (!isSynopsisTranslated) {
-        btnTr.innerText = dict.btnTranslate;
-      }
+      btnTr.innerText = dict.btnTranslate || '[ TRANSLATE ]';
     }
   }
 
