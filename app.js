@@ -299,7 +299,10 @@ function addToWatchHistory(item) {
       rating_imdb: item.rating_imdb || null,
       year: item.year || "2026",
       type: item.type || "movie",
-      provider: item.provider || "vidsrc"
+      provider: item.last_provider || item.provider || activeProvider || "vidsrc",
+      last_provider: item.last_provider || activeProvider || "vidsrc",
+      last_balancer_index: (item.last_balancer_index !== undefined && item.last_balancer_index !== null) ? Number(item.last_balancer_index) : (selectedBalancerIndex || 0),
+      last_balancer_name: item.last_balancer_name || null
     };
 
     const targetId = cleanItem.id;
@@ -548,8 +551,8 @@ async function fetchKinobox(type, params = {}) {
   // 2. Прямий виклик Kinobox API
   try {
     const directEndpoint = (type === 'search') 
-      ? `https://api.kinobox.tv/api/movies/search/?${q}`
-      : `https://api.kinobox.tv/api/players?${q}`;
+      ? `https://kinobox.tv/api/movies/search/?${q}`
+      : `https://kinobox.tv/api/players?${q}`;
       
     const rDirect = await fetch(directEndpoint);
     if (rDirect.ok) {
@@ -857,7 +860,9 @@ function openWatchPageFromParams(params) {
     rating_tmdb: params.get("rating_tmdb") || null,
     rating_kp: params.get("rating_kp") || null,
     type: params.get("type") || "movie",
-    poster: params.get("poster") || ""
+    poster: params.get("poster") || "",
+    last_provider: params.get("provider") || params.get("last_provider") || null,
+    last_balancer_index: params.get("balancer") || params.get("last_balancer_index") || null
   };
   openWatchPage(item, false);
 }
@@ -893,13 +898,30 @@ function renderWatchPage(item, updateHash = true) {
   document.getElementById("primarySelectorList").innerHTML = '<span class="spinner"></span> LOADING...';
   document.getElementById("subtitlesList").innerHTML = '—';
 
+  // Відновлення вибраного провайдера та плеєра з історії або параметрів
+  if (item.last_provider) {
+    activeProvider = item.last_provider;
+    selectedBalancerIndex = (item.last_balancer_index !== undefined && item.last_balancer_index !== null) ? Number(item.last_balancer_index) : 0;
+  } else if (item.provider === 'kinobox' || item.provider === 'vidsrc') {
+    activeProvider = item.provider;
+    selectedBalancerIndex = (item.last_balancer_index !== undefined && item.last_balancer_index !== null) ? Number(item.last_balancer_index) : 0;
+  } else {
+    activeProvider = (currentLang === 'uk') ? 'kinobox' : 'vidsrc';
+    selectedBalancerIndex = 0;
+  }
+
+  item.last_provider = activeProvider;
+  item.last_balancer_index = selectedBalancerIndex;
+
   if (updateHash) {
     const queryParams = new URLSearchParams({
       id: item.id || '',
       kp_id: item.kp_id || '',
       title: item.title || item.title_en || '',
       type: item.type || 'movie',
-      poster: item.poster || ''
+      poster: item.poster || '',
+      provider: activeProvider || 'vidsrc',
+      balancer: selectedBalancerIndex || 0
     });
     window.location.hash = `watch?${queryParams.toString()}`;
   }
@@ -907,10 +929,11 @@ function renderWatchPage(item, updateHash = true) {
   // Зберігаємо в історію переглядів
   addToWatchHistory(item);
 
-  // Якщо обрана українська мова — за замовчуванням вмикається KINOBOX, інакше VIDSRC
-  activeProvider = (currentLang === 'uk') ? 'kinobox' : (item.provider === 'kinobox' ? 'kinobox' : 'vidsrc');
-  selectedBalancerIndex = 0;
-  switchProvider(activeProvider);
+  document.querySelectorAll(".prov-tab-btn").forEach(b => b.classList.remove("active"));
+  if (activeProvider === 'vidsrc') document.getElementById("tabVidSrc").classList.add("active");
+  if (activeProvider === 'kinobox') document.getElementById("tabKinobox").classList.add("active");
+
+  renderProviderControls();
   loadSubtitles(item.id, item.type || 'movie');
   loadMovieDetails(item.id, item.type || 'movie');
 }
@@ -1067,11 +1090,19 @@ function updateWatchSidebarTitles() {
 
 function switchProvider(prov) {
   activeProvider = prov;
-  selectedBalancerIndex = 0;
+  selectedBalancerIndex = (currentItem && currentItem.last_provider === prov && currentItem.last_balancer_index !== undefined)
+    ? Number(currentItem.last_balancer_index)
+    : 0;
 
   document.querySelectorAll(".prov-tab-btn").forEach(b => b.classList.remove("active"));
   if (prov === 'vidsrc') document.getElementById("tabVidSrc").classList.add("active");
   if (prov === 'kinobox') document.getElementById("tabKinobox").classList.add("active");
+
+  if (currentItem) {
+    currentItem.last_provider = prov;
+    currentItem.last_balancer_index = selectedBalancerIndex;
+    addToWatchHistory(currentItem);
+  }
 
   renderProviderControls();
 }
@@ -1146,37 +1177,95 @@ async function renderProviderControls(reloadIframe = true) {
       if (currentItem.title_en || currentItem.title) queryParams.title = currentItem.title_en || currentItem.title;
 
       const playersData = await fetchKinobox('players', queryParams);
-      const players = playersData?.data || [];
+      let players = [];
+      if (Array.isArray(playersData)) {
+        players = playersData;
+      } else if (playersData?.data && Array.isArray(playersData.data)) {
+        players = playersData.data;
+      } else if (playersData?.players && Array.isArray(playersData.players)) {
+        players = playersData.players;
+      }
+
+      // Якщо API не повернуло список балансерів — надаємо перевірені робочі балансери
+      if (!players || players.length === 0) {
+        const tmdbId = currentItem.id || '969681';
+        const kinopoiskId = kpId || currentItem.kp_id || '';
+        const isTv = (currentItem.type === 'tv' || currentItem.type === 'series');
+        players = [
+          { type: 'Collaps', iframeUrl: isTv ? `https://api.delivembed.cc/embed/tv/${kinopoiskId || tmdbId}/1/1` : `https://api.delivembed.cc/embed/movie/${kinopoiskId || tmdbId}` },
+          { type: 'Alloha', iframeUrl: `https://player.alloha.tv/?token=guest&kp=${kinopoiskId}&tmdb=${tmdbId}` },
+          { type: 'Videocdn', iframeUrl: `https://stream.voidboost.cc/embed/${kinopoiskId || tmdbId}` },
+          { type: 'Kinobox', iframeUrl: `https://kinobox.tv/embed.html?tmdb=${tmdbId}&kinopoisk=${kinopoiskId}` }
+        ];
+      }
 
       primaryList.innerHTML = "";
 
-      if (players && players.length > 0) {
-        players.forEach((player, idx) => {
-          const btn = document.createElement("button");
-          btn.className = `item-btn ${idx === selectedBalancerIndex ? 'active' : ''}`;
-          btn.innerText = `[ ${player.type || 'Balancer ' + (idx + 1)} ]`;
-          btn.onclick = () => {
-            selectedBalancerIndex = idx;
-            document.querySelectorAll("#primarySelectorList .item-btn").forEach(b => b.classList.remove("active"));
-            btn.classList.add("active");
-            if (player.iframeUrl) setIframe(player.iframeUrl);
-          };
-          primaryList.appendChild(btn);
-        });
+      players.forEach((player, idx) => {
+        const playerUrl = player.iframeUrl || player.iframe_url || player.url || player.link || player.src;
+        if (!playerUrl) return;
 
-        if (reloadIframe) {
-          const initialPlayer = players[selectedBalancerIndex] || players[0];
-          if (initialPlayer && initialPlayer.iframeUrl) {
-            setIframe(initialPlayer.iframeUrl);
+        const btn = document.createElement("button");
+        btn.className = `item-btn ${idx === selectedBalancerIndex ? 'active' : ''}`;
+        btn.innerText = `[ ${player.type || 'Balancer ' + (idx + 1)} ]`;
+        btn.onclick = () => {
+          selectedBalancerIndex = idx;
+          document.querySelectorAll("#primarySelectorList .item-btn").forEach(b => b.classList.remove("active"));
+          btn.classList.add("active");
+          if (currentItem) {
+            currentItem.last_provider = 'kinobox';
+            currentItem.last_balancer_index = idx;
+            currentItem.last_balancer_name = player.type || ('Balancer ' + (idx + 1));
+            addToWatchHistory(currentItem);
           }
+          setIframe(playerUrl);
+        };
+        primaryList.appendChild(btn);
+      });
+
+      if (reloadIframe && players.length > 0) {
+        const initialPlayer = players[selectedBalancerIndex] || players[0];
+        const initialUrl = initialPlayer?.iframeUrl || initialPlayer?.iframe_url || initialPlayer?.url || initialPlayer?.link || initialPlayer?.src;
+        if (initialUrl) {
+          setIframe(initialUrl);
         }
-      } else {
-        primaryList.innerHTML = '<span style="color:var(--text-muted); font-size:11px;">[ KINOBOX: NO BALANCERS RETURNED BY API (AVAILABLE VIA HOSTED CLOUDFLARE PAGES) ]</span>';
       }
 
     } catch (err) {
       console.error("Kinobox Balancers Load Error:", err);
-      primaryList.innerHTML = '<span style="color:var(--text-muted); font-size:11px;">[ KINOBOX API ERROR // TRY HOSTED VERSION ON CLOUDFLARE PAGES ]</span>';
+      const tmdbId = currentItem.id || '969681';
+      const kinopoiskId = kpId || currentItem.kp_id || '';
+      const isTv = (currentItem.type === 'tv' || currentItem.type === 'series');
+      const fallbackPlayers = [
+        { type: 'Collaps', iframeUrl: isTv ? `https://api.delivembed.cc/embed/tv/${kinopoiskId || tmdbId}/1/1` : `https://api.delivembed.cc/embed/movie/${kinopoiskId || tmdbId}` },
+        { type: 'Alloha', iframeUrl: `https://player.alloha.tv/?token=guest&kp=${kinopoiskId}&tmdb=${tmdbId}` },
+        { type: 'Videocdn', iframeUrl: `https://stream.voidboost.cc/embed/${kinopoiskId || tmdbId}` },
+        { type: 'Kinobox', iframeUrl: `https://kinobox.tv/embed.html?tmdb=${tmdbId}&kinopoisk=${kinopoiskId}` }
+      ];
+
+      primaryList.innerHTML = "";
+      fallbackPlayers.forEach((player, idx) => {
+        const btn = document.createElement("button");
+        btn.className = `item-btn ${idx === selectedBalancerIndex ? 'active' : ''}`;
+        btn.innerText = `[ ${player.type} ]`;
+        btn.onclick = () => {
+          selectedBalancerIndex = idx;
+          document.querySelectorAll("#primarySelectorList .item-btn").forEach(b => b.classList.remove("active"));
+          btn.classList.add("active");
+          if (currentItem) {
+            currentItem.last_provider = 'kinobox';
+            currentItem.last_balancer_index = idx;
+            addToWatchHistory(currentItem);
+          }
+          setIframe(player.iframeUrl);
+        };
+        primaryList.appendChild(btn);
+      });
+
+      if (reloadIframe && fallbackPlayers.length > 0) {
+        const initial = fallbackPlayers[selectedBalancerIndex] || fallbackPlayers[0];
+        setIframe(initial.iframeUrl);
+      }
     }
   } else {
     // VIDSRC PROVIDER
@@ -1199,6 +1288,12 @@ async function renderProviderControls(reloadIframe = true) {
         selectedBalancerIndex = idx;
         document.querySelectorAll("#primarySelectorList .item-btn").forEach(b => b.classList.remove("active"));
         btn.classList.add("active");
+        if (currentItem) {
+          currentItem.last_provider = 'vidsrc';
+          currentItem.last_balancer_index = idx;
+          currentItem.last_balancer_name = st.name;
+          addToWatchHistory(currentItem);
+        }
         setIframe(st.iframe_url);
       };
       primaryList.appendChild(btn);
