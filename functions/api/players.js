@@ -10,11 +10,12 @@ export async function onRequest(context) {
     : `https://api.delivembed.cc/embed/tmdb/${tmdbId}`;
 
   const players = [
-    { type: "Collaps (Multi)", iframeUrl: collapsUrl },
-    { type: "Alloha / Videocdn", iframeUrl: isTv ? `https://vidsrc.cc/v2/embed/tv/${tmdbId}/1/1` : `https://vidsrc.cc/v2/embed/movie/${tmdbId}` },
-    { type: "Videasy (Fast)", iframeUrl: isTv ? `https://player.videasy.net/tv/${tmdbId}/1/1` : `https://player.videasy.net/movie/${tmdbId}` },
-    { type: "AutoEmbed (HD)", iframeUrl: isTv ? `https://player.autoembed.app/embed/tv/${tmdbId}/1/1` : `https://player.autoembed.app/embed/movie/${tmdbId}` },
-    { type: "VidLink", iframeUrl: isTv ? `https://vidlink.pro/tv/${tmdbId}/1/1` : `https://vidlink.pro/movie/${tmdbId}` }
+    { type: "Alloha", iframeUrl: `https://player.alloha.tv/?token=guest&kp=${kpId}&tmdb=${tmdbId}` },
+    { type: "Turbo", iframeUrl: isTv ? `https://player.videasy.net/tv/${tmdbId}/1/1` : `https://player.videasy.net/movie/${tmdbId}` },
+    { type: "Gencit", iframeUrl: isTv ? `https://vidsrc.cc/v2/embed/tv/${tmdbId}/1/1` : `https://vidsrc.cc/v2/embed/movie/${tmdbId}` },
+    { type: "Veoveo", iframeUrl: isTv ? `https://vixsrc.to/tv/${tmdbId}/1/1` : `https://vixsrc.to/movie/${tmdbId}` },
+    { type: "Videoseed", iframeUrl: isTv ? `https://player.vidplus.to/embed/tv/${tmdbId}/1/1` : `https://player.vidplus.to/embed/movie/${tmdbId}` },
+    { type: "Collaps", iframeUrl: collapsUrl }
   ];
 
   return new Response(JSON.stringify({ data: players }), {

@@ -89,7 +89,7 @@ function buildStreamUrl(server, id, type = "movie") {
    GLOBAL STATE & LOCALIZATION ENGINE
    ========================================================================= */
 let currentProvider = 'all';
-let currentLang = 'en';
+let currentLang = (typeof localStorage !== 'undefined' && localStorage.getItem("fastfilm_lang")) ? localStorage.getItem("fastfilm_lang") : 'en';
 let currentItem = null;
 let activeProvider = 'vidsrc';
 let selectedBalancerIndex = 0;
@@ -189,7 +189,12 @@ let DICT = {
    APP INITIALIZATION & ROUTING
    ========================================================================= */
 document.addEventListener("DOMContentLoaded", async () => {
+  const savedLang = (typeof localStorage !== 'undefined' && localStorage.getItem("fastfilm_lang")) ? localStorage.getItem("fastfilm_lang") : currentLang;
+  currentLang = savedLang;
   await loadLocales();
+  if (savedLang && savedLang !== 'en') {
+    changeLanguage(savedLang);
+  }
   handleRoute();
   detectAdBlock();
 
@@ -227,7 +232,7 @@ function populateLanguageDropdown() {
   const select = document.getElementById("langSelect");
   if (!select) return;
 
-  const currentSelected = select.value || currentLang;
+  const currentSelected = (typeof localStorage !== 'undefined' && localStorage.getItem("fastfilm_lang")) ? localStorage.getItem("fastfilm_lang") : currentLang;
   select.innerHTML = "";
 
   Object.keys(DICT).forEach(code => {
@@ -392,6 +397,13 @@ function setProvider(prov) {
 
 function changeLanguage(lang) {
   currentLang = lang;
+  if (typeof localStorage !== 'undefined') {
+    localStorage.setItem("fastfilm_lang", lang);
+  }
+  const select = document.getElementById("langSelect");
+  if (select && select.value !== lang) {
+    select.value = lang;
+  }
   const dict = DICT[lang] || DICT.en;
   
   document.getElementById("searchInput").placeholder = dict.placeholder;
@@ -1123,22 +1135,45 @@ async function renderProviderControls(reloadIframe = true) {
     const kpId = currentItem.kp_id || '';
     const isTv = (currentItem.type === 'tv' || currentItem.type === 'series');
 
-    const collapsUrl = kpId 
-      ? `https://api.delivembed.cc/embed/kp/${kpId}` 
-      : `https://api.delivembed.cc/embed/tmdb/${tmdbId}`;
+    let players = [];
 
-    const players = [
-      { type: "Collaps (Multi)", iframeUrl: collapsUrl },
-      { type: "Alloha / Videocdn", iframeUrl: isTv ? `https://vidsrc.cc/v2/embed/tv/${tmdbId}/1/1` : `https://vidsrc.cc/v2/embed/movie/${tmdbId}` },
-      { type: "Videasy (Fast)", iframeUrl: isTv ? `https://player.videasy.net/tv/${tmdbId}/1/1` : `https://player.videasy.net/movie/${tmdbId}` },
-      { type: "AutoEmbed (HD)", iframeUrl: isTv ? `https://player.autoembed.app/embed/tv/${tmdbId}/1/1` : `https://player.autoembed.app/embed/movie/${tmdbId}` },
-      { type: "VidLink", iframeUrl: isTv ? `https://vidlink.pro/tv/${tmdbId}/1/1` : `https://vidlink.pro/movie/${tmdbId}` }
-    ];
+    // 1. Спроба отримати динамічний список плеєрів через Edge Function
+    try {
+      const q = new URLSearchParams({ kinopoisk: kpId, tmdb: tmdbId, type: currentItem.type || 'movie' }).toString();
+      const r = await fetch(`/api/players?${q}`);
+      if (r.ok) {
+        const json = await r.json();
+        if (Array.isArray(json)) players = json;
+        else if (Array.isArray(json.data)) players = json.data;
+        else if (Array.isArray(json.players)) players = json.players;
+      }
+    } catch(e) {}
+
+    // 2. Якщо динамічний список порожній — формуємо повний перелік плеєрів Kinobox
+    if (!players || players.length === 0) {
+      const collapsUrl = kpId 
+        ? `https://api.delivembed.cc/embed/kp/${kpId}` 
+        : `https://api.delivembed.cc/embed/tmdb/${tmdbId}`;
+
+      players = [
+        { type: "Alloha", iframeUrl: `https://player.alloha.tv/?token=guest&kp=${kpId}&tmdb=${tmdbId}` },
+        { type: "Turbo", iframeUrl: isTv ? `https://player.videasy.net/tv/${tmdbId}/1/1` : `https://player.videasy.net/movie/${tmdbId}` },
+        { type: "Gencit", iframeUrl: isTv ? `https://vidsrc.cc/v2/embed/tv/${tmdbId}/1/1` : `https://vidsrc.cc/v2/embed/movie/${tmdbId}` },
+        { type: "Veoveo", iframeUrl: isTv ? `https://vixsrc.to/tv/${tmdbId}/1/1` : `https://vixsrc.to/movie/${tmdbId}` },
+        { type: "Videoseed", iframeUrl: isTv ? `https://player.vidplus.to/embed/tv/${tmdbId}/1/1` : `https://player.vidplus.to/embed/movie/${tmdbId}` },
+        { type: "Collaps", iframeUrl: collapsUrl }
+      ];
+    }
+
+    primaryList.innerHTML = "";
 
     players.forEach((player, idx) => {
+      const playerUrl = player.iframeUrl || player.iframe_url || player.url || player.link || player.src;
+      if (!playerUrl) return;
+
       const btn = document.createElement("button");
       btn.className = `item-btn ${idx === selectedBalancerIndex ? 'active' : ''}`;
-      btn.innerText = `[ ${player.type} ]`;
+      btn.innerText = `[ ${player.type || 'Плеєр ' + (idx + 1)} ]`;
       btn.onclick = () => {
         selectedBalancerIndex = idx;
         document.querySelectorAll("#primarySelectorList .item-btn").forEach(b => b.classList.remove("active"));
@@ -1146,18 +1181,19 @@ async function renderProviderControls(reloadIframe = true) {
         if (currentItem) {
           currentItem.last_provider = 'kinobox';
           currentItem.last_balancer_index = idx;
-          currentItem.last_balancer_name = player.type;
+          currentItem.last_balancer_name = player.type || ('Плеєр ' + (idx + 1));
           addToWatchHistory(currentItem);
         }
-        setIframe(player.iframeUrl);
+        setIframe(playerUrl);
       };
       primaryList.appendChild(btn);
     });
 
     if (reloadIframe && players.length > 0) {
       const initialPlayer = players[selectedBalancerIndex] || players[0];
-      if (initialPlayer && initialPlayer.iframeUrl) {
-        setIframe(initialPlayer.iframeUrl);
+      const initialUrl = initialPlayer?.iframeUrl || initialPlayer?.iframe_url || initialPlayer?.url || initialPlayer?.link || initialPlayer?.src;
+      if (initialUrl) {
+        setIframe(initialUrl);
       }
     }
   } else {
