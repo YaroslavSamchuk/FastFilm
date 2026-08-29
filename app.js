@@ -940,6 +940,15 @@ async function loadMovieDetails(id, type) {
         currentOriginalSynopsis = "No extended synopsis available for this title.";
         document.getElementById("watchSynopsis").innerText = currentOriginalSynopsis;
       }
+      if (data.poster || data.poster_path || data.images?.poster || data.backdrop) {
+        const resolvedPoster = data.poster || data.images?.poster || (data.poster_path ? `https://image.tmdb.org/t/p/w500${data.poster_path}` : null) || data.backdrop;
+        if (resolvedPoster && (!currentItem.poster || currentItem.poster.includes('unsplash'))) {
+          currentItem.poster = resolvedPoster;
+          const wPoster = document.getElementById("watchPoster");
+          if (wPoster) wPoster.src = resolvedPoster;
+          addToWatchHistory(currentItem);
+        }
+      }
       if (data.year) document.getElementById("watchYear").innerText = data.year;
       if (data.rating || data.vote_average) {
         if (!currentItem.rating_imdb) currentItem.rating_imdb = data.vote_average || data.rating;
@@ -1104,6 +1113,12 @@ async function renderProviderControls() {
             if (match) {
               kpId = match.id;
               currentItem.kp_id = kpId;
+              if (match.poster && (!currentItem.poster || currentItem.poster.includes('unsplash'))) {
+                currentItem.poster = match.poster;
+                const wPoster = document.getElementById("watchPoster");
+                if (wPoster) wPoster.src = match.poster;
+                addToWatchHistory(currentItem);
+              }
               if (match.rating?.kinopoisk?.value) {
                 currentItem.rating_kp = match.rating.kinopoisk.value;
               }
