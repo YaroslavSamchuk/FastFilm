@@ -436,8 +436,15 @@ function changeLanguage(lang) {
   if (playBtn) playBtn.innerText = dict.play;
 
   const btnTr = document.getElementById("btnTranslateSynopsis");
-  if (btnTr && !isSynopsisTranslated) {
-    btnTr.innerText = dict.btnTranslate;
+  if (btnTr) {
+    if (lang === 'en' || lang.startsWith('en')) {
+      btnTr.style.display = 'none';
+    } else {
+      btnTr.style.display = 'inline-block';
+      if (!isSynopsisTranslated) {
+        btnTr.innerText = dict.btnTranslate;
+      }
+    }
   }
 
   renderWatchHistory();
@@ -712,7 +719,7 @@ function formatRatingBadge(item) {
     const num = parseFloat(rImdb);
     if (!isNaN(num) && num > 0) {
       const val = (num > 10) ? (num / 10).toFixed(1) : num.toFixed(1);
-      parts.push(`IMDb ${val}`);
+      parts.push(`${val}`);
     }
   }
 
@@ -721,7 +728,7 @@ function formatRatingBadge(item) {
       const num = parseFloat(item.rating);
       if (!isNaN(num) && num > 0) {
         const val = (num > 10) ? (num / 10).toFixed(1) : num.toFixed(1);
-        return `★ IMDb ${val}`;
+        return `★ ${val}`;
       }
     }
     return `★ 8.0`;
@@ -768,7 +775,15 @@ function formatSidebarRating(item) {
 function createCard(item) {
   const card = document.createElement("div");
   card.className = "movie-card";
+  card.setAttribute("tabindex", "0");
+  card.setAttribute("role", "button");
   card.onclick = () => openWatchPage(item);
+  card.onkeydown = (e) => {
+    if (e.key === "Enter" || e.key === " ") {
+      e.preventDefault();
+      openWatchPage(item);
+    }
+  };
 
   const dict = DICT[currentLang] || DICT.en;
   const isTv = (item.type === 'tv' || item.type === 'series');
@@ -913,8 +928,13 @@ async function loadMovieDetails(id, type) {
         document.getElementById("watchSynopsis").innerText = desc;
         const btn = document.getElementById("btnTranslateSynopsis");
         if (btn) {
-          btn.innerText = dict.btnTranslate;
-          btn.classList.remove("active");
+          if (currentLang === 'en' || currentLang.startsWith('en')) {
+            btn.style.display = 'none';
+          } else {
+            btn.style.display = 'inline-block';
+            btn.innerText = dict.btnTranslate;
+            btn.classList.remove("active");
+          }
         }
       } else {
         currentOriginalSynopsis = "No extended synopsis available for this title.";

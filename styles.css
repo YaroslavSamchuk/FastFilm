@@ -367,10 +367,22 @@ header {
   position: relative;
 }
 
-.movie-card:hover {
-  border-color: var(--border-focus);
-  transform: translateY(-2px);
+.movie-card:hover,
+.movie-card:focus-visible {
+  border-color: #fafafa;
+  transform: translateY(-2px) scale(1.02);
   background: var(--surface-hover);
+  outline: 2px solid #fafafa;
+  outline-offset: 2px;
+  z-index: 2;
+}
+
+button:focus-visible,
+a:focus-visible,
+select:focus-visible,
+input:focus-visible {
+  outline: 2px solid #fafafa;
+  outline-offset: 2px;
 }
 
 .poster-box {
