@@ -1,0 +1,1276 @@
+/* =========================================================================
+   FASTFILM ENGINE // APPLICATION LOGIC
+   100% Pure Client-Side Architecture (Cloudflare Pages & GitHub Pages Ready)
+   ========================================================================= */
+
+/* =========================================================================
+   VIDSRC SERVERS REGISTRY
+   ========================================================================= */
+const VIDSRC_SERVERS = [
+  { name: "Azute", url: "https://vidrock.ru" },
+  { name: "Yoru", url: "https://video.moviepire.co/embed" },
+  { name: "4K", url: "https://player.videasy.net" },
+  { name: "Nest", url: "https://vidnest.fun" },
+  { name: "Mist", url: "https://play.xpass.top/e" },
+  { name: "Peach", url: "https://peachify.top/embed" },
+  { name: "Pass", url: "https://vidcore.net" },
+  { name: "Mistify", url: "https://vaplayer.ru/embed" },
+  { name: "Simplify", url: "https://zxcstream.xyz/player" },
+  { name: "Asia", url: "https://nhdapi.com/embed" },
+  { name: "Cine", url: "https://cinesrc.st/embed" },
+  { name: "Vidmux", url: "https://vidlux.site/embed" },
+  { name: "Pablo", url: "https://vidsrc.cc/v3/embed" },
+  { name: "Braflix", url: "https://api.cineby.homes/embed" },
+  { name: "India", url: "https://vidup.to" },
+  { name: "Diablo", url: "https://tanime.tv" },
+  { name: "Italian", url: "https://vixsrc.to" },
+  { name: "Vidind", url: "https://player.vidify.top/embed" },
+  { name: "4K2", url: "https://www.vidking.net/embed" },
+  { name: "Prime", url: "https://player.vidrush.net/embed" },
+  { name: "Main", url: "https://player.vidzee.wtf/embed" },
+  { name: "4KHD", url: "https://mapple.uk/watch" },
+  { name: "Vidora", url: "https://anyembed.xyz/embed" },
+  { name: "Fade", url: "https://rivestream.org/embed" },
+  { name: "Vidlink", url: "https://vidlink.pro" },
+  { name: "Nero", url: "https://vidfast.pro" },
+  { name: "Flixify", url: "https://vidflix.club" },
+  { name: "Astra", url: "https://vidsrc.su/embed" },
+  { name: "Vidplay", url: "https://vidsrc.cc/v2/embed" },
+  { name: "Hindi", url: "https://vidsrc.wtf/api/1" },
+  { name: "Vidsrc", url: "https://vidsrcme.ru/embed" },
+  { name: "2embed", url: "https://www.2embed.stream/embed" },
+  { name: "PrimeWire", url: "https://primesrc.me/embed" },
+  { name: "French", url: "https://frembed.asia/api" },
+  { name: "Club", url: "https://moviesapi.to" },
+  { name: "Sage", url: "https://111movies.com" },
+  { name: "Aura", url: "https://player.autoembed.app/embed" },
+  { name: "Spanish", url: "https://play.modocine.com/play.php/embed" },
+  { name: "Flix", url: "https://player.vidplus.to/embed" },
+  { name: "Portuguese", url: "https://superflixapi.buzz" }
+];
+
+function buildStreamUrl(server, id, type = "movie") {
+  const s = server.name.toLowerCase();
+  const base = server.url;
+  const isTv = (type === "tv" || type === "series");
+
+  if (isTv) {
+    if (s === "simplify") return `${base}/tv/${id}/1/1?autoplay=true&color=addc35&back=false&domainAd=braflix.win`;
+    if (s === "hindi") return `${base}/tv/?id=${id}&s=1&e=1&poster=https://image.tmdb.org/t/p/w780/enNubozHn9pXi0ycTVYUWfpHZm.jpg&color=ffffff`;
+    if (s === "4k2") return `${base}/tv/${id}/1/1`;
+    if (s === "prime") return `${base}/tv/${id}/1/1`;
+    if (s === "4khd") return `${base}/tv/${id}/1/1?autoPlay=true&theme=addc35`;
+    if (s === "primewire") return `${base}/tv?imdb=${id}&season=1&episode=1&fallback=true&server_order=PrimeVid,Voe,Dood`;
+    if (s === "french") return `${base}/serie.php?id=${id}&sa=1&epi=1`;
+    if (s === "fade") return `${base}?type=tv&id=${id}&season=1&episode=1&sendMetadata=true`;
+    if (s === "vidora") return `${base}/tmdb-tv-${id}-1-1`;
+    if (s === "pass" || s === "portuguese") return `${base}/serie/${id}/1/1`;
+    return `${base}/tv/${id}/1/1`;
+  } else {
+    if (s === "simplify") return `${base}/movie/${id}?autoplay=true&color=addc35&back=false&domainAd=braflix.win`;
+    if (s === "hindi") return `${base}/movie/?id=${id}&s=undefined&e=undefined&poster=https://image.tmdb.org/t/p/w780/enNubozHn9pXi0ycTVYUWfpHZm.jpg&color=ffffff`;
+    if (s === "4k2") return `${base}/movie/${id}`;
+    if (s === "prime") return `${base}/${id}`;
+    if (s === "4khd") return `${base}/movie/${id}?autoPlay=true&theme=addc35`;
+    if (s === "primewire") return `${base}/movie?imdb=${id}&fallback=true&server_order=PrimeVid,Voe,Dood`;
+    if (s === "french") return `${base}/film.php?id=${id}`;
+    if (s === "fade") return `${base}?type=movie&id=${id}&sendMetadata=true`;
+    if (s === "vidora") return `${base}/tmdb-movie-${id}`;
+    if (s === "pass" || s === "portuguese") return `${base}/filme/${id}`;
+    return `${base}/movie/${id}`;
+  }
+}
+
+/* =========================================================================
+   GLOBAL STATE & LOCALIZATION ENGINE
+   ========================================================================= */
+let currentProvider = 'all';
+let currentLang = 'en';
+let currentItem = null;
+let activeProvider = 'vidsrc';
+let selectedBalancerIndex = 0;
+let browseData = null;
+
+let currentOriginalSynopsis = "";
+let currentTranslatedSynopsis = null;
+let isSynopsisTranslated = false;
+
+// Embedded fallback dictionary (prevents breaks when opened via file:///)
+let DICT = {
+  en: {
+    name: "ENGLISH",
+    code: "en",
+    placeholder: "Search movies, TV series, directors, anime...",
+    execute: "EXECUTE",
+    results: "[ SEARCH RESULTS ]",
+    primaryKinobox: "SELECT KINOBOX BALANCER:",
+    primaryVidsrc: "SELECT VIDSRC SERVER:",
+    subs: "AVAILABLE SUBTITLES:",
+    back: "[ ← BACK TO CATALOG ]",
+    play: "[ ▶ PLAY NOW ]",
+    tabFilterAll: "[ 01. ALL ]",
+    tabFilterVidsrc: "[ 02. VIDSRC ]",
+    tabFilterKinobox: "[ 03. KINOBOX ]",
+    watchTabVidsrc: "[ 01. VIDSRC ]",
+    watchTabKinobox: "[ 02. KINOBOX ]",
+    lblYear: "YEAR",
+    lblRating: "RATING",
+    lblType: "TYPE",
+    lblSources: "SOURCES",
+    lblMovie: "MOVIE",
+    lblSeries: "SERIES",
+    sourcesVal: "VIDSRC • KINOBOX",
+    lblSynopsis: "SYNOPSIS:",
+    btnTranslate: "[ TRANSLATE ]",
+    btnOriginal: "[ ORIGINAL (EN) ]",
+    btnTranslating: "[ TRANSLATING... ]",
+    btnError: "[ ERROR ]",
+    trendingMovies: "TRENDING MOVIES THIS WEEK",
+    trendingSeries: "TRENDING SERIES THIS WEEK",
+    popularMovies: "POPULAR MOVIES",
+    popularSeries: "POPULAR SERIES",
+    releases: "RELEASES",
+    adblockTag: "[ AD-BLOCKER DETECTED // SYSTEM NOTICE ]",
+    adblockTitle: "Please disable your AdBlocker for video playback",
+    adblockDesc: "Some video streaming servers (VidSrc & Kinobox) might fail to load if an AdBlocker is active. To ensure uninterrupted playback, please add this site to your AdBlock whitelist or pause your extension.",
+    adblockClose: "[ ✕ I UNDERSTAND / CLOSE ]",
+    adblockDontShow: "[ DON'T SHOW AGAIN ]"
+  },
+  uk: {
+    name: "УКРАЇНСЬКА",
+    code: "uk",
+    placeholder: "Пошук фільмів, серіалів, режисерів, аніме...",
+    execute: "ВИКОНАТИ",
+    results: "[ РЕЗУЛЬТАТИ ПОШУКУ ]",
+    primaryKinobox: "ВИБЕРІТЬ БАЛАНСЕР KINOBOX:",
+    primaryVidsrc: "ВИБЕРІТЬ СЕРВЕР VIDSRC:",
+    subs: "ДОСТУПНІ СУБТИТРИ:",
+    back: "[ ← НАЗАД ДО КАТАЛОГУ ]",
+    play: "[ ▶ ДИВИТИСЯ ЗАРАЗ ]",
+    tabFilterAll: "[ 01. ВСІ ]",
+    tabFilterVidsrc: "[ 02. VIDSRC ]",
+    tabFilterKinobox: "[ 03. KINOBOX ]",
+    watchTabVidsrc: "[ 01. VIDSRC ]",
+    watchTabKinobox: "[ 02. KINOBOX ]",
+    lblYear: "РІК",
+    lblRating: "РЕЙТИНГ",
+    lblType: "ТИП",
+    lblSources: "ДЖЕРЕЛА",
+    lblMovie: "ФІЛЬМ",
+    lblSeries: "СЕРІАЛ",
+    sourcesVal: "VIDSRC • KINOBOX",
+    lblSynopsis: "СИНОПСИС:",
+    btnTranslate: "[ ПЕРЕКЛАСТИ (UK) ]",
+    btnOriginal: "[ ОРИГІНАЛ (EN) ]",
+    btnTranslating: "[ ПЕРЕКЛАДАЮ... ]",
+    btnError: "[ ПОМИЛКА ]",
+    trendingMovies: "ТРЕНДОВІ ФІЛЬМИ ТИЖНЯ",
+    trendingSeries: "ТРЕНДОВІ СЕРІАЛИ ТИЖНЯ",
+    popularMovies: "ПОПУЛЯРНІ ФІЛЬМИ",
+    popularSeries: "ПОПУЛЯРНІ СЕРІАЛИ",
+    releases: "РЕЛІЗІВ",
+    adblockTag: "[ ВИЯВЛЕНО AD-BLOCKER // СИСТЕМНЕ ПОВІДОМЛЕННЯ ]",
+    adblockTitle: "Будь ласка, вимкніть AdBlock для коректного відтворення",
+    adblockDesc: "Деякі відеоплеєри та балансери можуть не завантажуватися через активний блокувальник реклами (AdBlock/uBlock). Щоб відео запускалося без помилок, будь ласка, додайте сайт у винятки або тимчасово вимкніть розширення.",
+    adblockClose: "[ ✕ ЗРОЗУМІЛО / ЗАКРИТИ ]",
+    adblockDontShow: "[ БІЛЬШЕ НЕ ПОКАЗУВАТИ ]"
+  }
+};
+
+/* =========================================================================
+   APP INITIALIZATION & ROUTING
+   ========================================================================= */
+document.addEventListener("DOMContentLoaded", async () => {
+  await loadLocales();
+  handleRoute();
+  detectAdBlock();
+
+  window.addEventListener("hashchange", () => {
+    handleRoute();
+  });
+
+  document.getElementById("searchInput").addEventListener("keydown", (e) => {
+    if (e.key === "Enter") triggerSearch();
+  });
+});
+
+async function loadLocales() {
+  // 1. Пріоритет: якщо підключено locales.js (миттєво працює на file:/// та http/https без жодних CORS помилок)
+  if (window.FASTFILM_LOCALES && Object.keys(window.FASTFILM_LOCALES).length > 0) {
+    DICT = window.FASTFILM_LOCALES;
+    populateLanguageDropdown();
+    return;
+  }
+
+  // 2. Якщо запущено на веб-сервері (http: або https:), динамічно завантажуємо locales.json
+  if (window.location.protocol === 'http:' || window.location.protocol === 'https:') {
+    try {
+      const res = await fetch("locales.json");
+      if (res.ok) {
+        DICT = await res.json();
+      }
+    } catch (err) {}
+  }
+
+  populateLanguageDropdown();
+}
+
+function populateLanguageDropdown() {
+  const select = document.getElementById("langSelect");
+  if (!select) return;
+
+  const currentSelected = select.value || currentLang;
+  select.innerHTML = "";
+
+  Object.keys(DICT).forEach(code => {
+    const item = DICT[code];
+    const opt = document.createElement("option");
+    opt.value = code;
+    opt.innerText = `[ ${code.toUpperCase()} ] ${item.name || code.toUpperCase()}`;
+    if (code === currentSelected) opt.selected = true;
+    select.appendChild(opt);
+  });
+}
+
+/* =========================================================================
+   WATCH HISTORY MODULE (LAST 6 RECENTLY VIEWED ITEMS)
+   ========================================================================= */
+function normalizeTitleKey(t) {
+  return (t || "").toLowerCase().replace(/[^a-z0-9а-яіїєґ]/gi, "").trim();
+}
+
+function getWatchHistory() {
+  try {
+    const raw = localStorage.getItem("fastfilm_watch_history");
+    if (!raw) return [];
+    const parsed = JSON.parse(raw);
+    if (!Array.isArray(parsed)) return [];
+
+    const deduplicated = [];
+    parsed.forEach(it => {
+      if (!it) return;
+      const itId = (it.id !== null && it.id !== undefined && it.id !== "") ? String(it.id) : null;
+      const itKp = (it.kp_id !== null && it.kp_id !== undefined && it.kp_id !== "") ? String(it.kp_id) : null;
+      const itTitle = normalizeTitleKey(it.title_en || it.title || it.name);
+
+      const exists = deduplicated.some(u => {
+        const uId = (u.id !== null && u.id !== undefined && u.id !== "") ? String(u.id) : null;
+        const uKp = (u.kp_id !== null && u.kp_id !== undefined && u.kp_id !== "") ? String(u.kp_id) : null;
+        const uTitle = normalizeTitleKey(u.title_en || u.title || u.name);
+
+        if (itId && uId && itId === uId) return true;
+        if (itKp && uKp && itKp === uKp) return true;
+        if (itTitle && uTitle && itTitle === uTitle) return true;
+        return false;
+      });
+
+      if (!exists) {
+        deduplicated.push(it);
+      }
+    });
+
+    return deduplicated.slice(0, 6);
+  } catch (e) {
+    return [];
+  }
+}
+
+function addToWatchHistory(item) {
+  if (!item || (!item.id && !item.kp_id && !item.title && !item.title_en)) return;
+  try {
+    let history = getWatchHistory();
+    const cleanItem = {
+      id: (item.id !== null && item.id !== undefined && item.id !== "") ? String(item.id) : null,
+      kp_id: (item.kp_id !== null && item.kp_id !== undefined && item.kp_id !== "") ? String(item.kp_id) : null,
+      title: item.title || item.name || "Movie",
+      title_en: item.title_en || item.title || item.name || "Movie",
+      poster: item.poster || "",
+      rating: item.rating || "8.0",
+      rating_tmdb: item.rating_tmdb || null,
+      rating_kp: item.rating_kp || null,
+      rating_imdb: item.rating_imdb || null,
+      year: item.year || "2026",
+      type: item.type || "movie",
+      provider: item.provider || "vidsrc"
+    };
+
+    const targetId = cleanItem.id;
+    const targetKp = cleanItem.kp_id;
+    const targetTitle = normalizeTitleKey(cleanItem.title_en || cleanItem.title);
+
+    history = history.filter(h => {
+      const hId = (h.id !== null && h.id !== undefined && h.id !== "") ? String(h.id) : null;
+      const hKp = (h.kp_id !== null && h.kp_id !== undefined && h.kp_id !== "") ? String(h.kp_id) : null;
+      const hTitle = normalizeTitleKey(h.title_en || h.title || h.name);
+
+      if (targetId && hId && targetId === hId) return false;
+      if (targetKp && hKp && targetKp === hKp) return false;
+      if (targetTitle && hTitle && targetTitle === hTitle) return false;
+      return true;
+    });
+
+    history.unshift(cleanItem);
+    history = history.slice(0, 6);
+
+    localStorage.setItem("fastfilm_watch_history", JSON.stringify(history));
+  } catch (e) {}
+}
+
+function clearWatchHistory() {
+  localStorage.removeItem("fastfilm_watch_history");
+  renderWatchHistory();
+}
+
+function renderWatchHistory() {
+  const historySec = document.getElementById("historySection");
+  const historyGrid = document.getElementById("historyGrid");
+  const historyTitle = document.getElementById("historyTitle");
+  const btnClear = document.getElementById("btnClearHistory");
+  if (!historySec || !historyGrid) return;
+
+  const dict = DICT[currentLang] || DICT.en;
+  if (historyTitle) historyTitle.innerText = `[ ${dict.recentlyWatched || 'RECENTLY WATCHED'} ]`;
+  if (btnClear) btnClear.innerText = dict.clearHistory || '[ CLEAR HISTORY ]';
+
+  const history = getWatchHistory();
+  if (!history || history.length === 0) {
+    historySec.style.display = "none";
+    historyGrid.innerHTML = "";
+    return;
+  }
+
+  historySec.style.display = "block";
+  historyGrid.innerHTML = "";
+  history.forEach(item => {
+    historyGrid.appendChild(createCard(item));
+  });
+}
+
+function handleRoute() {
+  const hash = window.location.hash;
+  if (hash.startsWith("#watch")) {
+    const queryStr = hash.replace("#watch?", "");
+    const params = new URLSearchParams(queryStr);
+    openWatchPageFromParams(params);
+  } else {
+    navigateHome(false);
+  }
+}
+
+function navigateHome(updateHash = true) {
+  document.title = "FastFilm";
+  document.getElementById("homePageView").style.display = "block";
+  document.getElementById("watchPageView").style.display = "none";
+  document.getElementById("btnBackToHome").style.display = "none";
+  document.getElementById("videoIframe").src = "";
+  if (updateHash && window.location.hash.startsWith("#watch")) {
+    window.location.hash = "";
+  }
+  renderWatchHistory();
+  if (!browseData) loadBrowseCatalog();
+}
+
+function setProvider(prov) {
+  currentProvider = prov;
+  document.querySelectorAll(".tab-btn[data-provider]").forEach(b => {
+    b.classList.toggle("active", b.dataset.provider === prov);
+  });
+  const q = document.getElementById("searchInput").value.trim();
+  if (q) triggerSearch();
+}
+
+function changeLanguage(lang) {
+  currentLang = lang;
+  const dict = DICT[lang] || DICT.en;
+  
+  document.getElementById("searchInput").placeholder = dict.placeholder;
+  document.getElementById("btnSearch").innerText = dict.execute;
+  
+  const tabAll = document.getElementById("tabFilterAll");
+  if (tabAll) tabAll.innerText = dict.tabFilterAll;
+  const tabVidsrc = document.getElementById("tabFilterVidsrc");
+  if (tabVidsrc) tabVidsrc.innerText = dict.tabFilterVidsrc;
+  const tabKinobox = document.getElementById("tabFilterKinobox");
+  if (tabKinobox) tabKinobox.innerText = dict.tabFilterKinobox;
+
+  const watchTabVid = document.getElementById("tabVidSrc");
+  if (watchTabVid) watchTabVid.innerText = dict.watchTabVidsrc;
+  const watchTabKino = document.getElementById("tabKinobox");
+  if (watchTabKino) watchTabKino.innerText = dict.watchTabKinobox;
+
+  const labelSubs = document.getElementById("labelSubs");
+  if (labelSubs) labelSubs.innerText = dict.subs;
+  const labelPrimary = document.getElementById("labelPrimarySelector");
+  if (labelPrimary) {
+    labelPrimary.innerText = (activeProvider === 'kinobox') ? dict.primaryKinobox : dict.primaryVidsrc;
+  }
+  const labelSynopsis = document.getElementById("labelSynopsis");
+  if (labelSynopsis) labelSynopsis.innerText = dict.lblSynopsis;
+
+  const lblYear = document.getElementById("lblYear");
+  if (lblYear) lblYear.innerText = dict.lblYear;
+  const lblRating = document.getElementById("lblRating");
+  if (lblRating) lblRating.innerText = dict.lblRating;
+  const lblType = document.getElementById("lblType");
+  if (lblType) lblType.innerText = dict.lblType;
+  const lblSources = document.getElementById("lblSources");
+  if (lblSources) lblSources.innerText = dict.lblSources;
+  const watchSources = document.getElementById("watchSources");
+  if (watchSources) watchSources.innerText = dict.sourcesVal;
+
+  document.getElementById("btnBackToHome").innerText = dict.back;
+  const playBtn = document.getElementById("heroPlayBtn");
+  if (playBtn) playBtn.innerText = dict.play;
+
+  const btnTr = document.getElementById("btnTranslateSynopsis");
+  if (btnTr && !isSynopsisTranslated) {
+    btnTr.innerText = dict.btnTranslate;
+  }
+
+  renderWatchHistory();
+  if (browseData) renderCollections(browseData);
+  if (currentItem) {
+    updateWatchSidebarTitles();
+    renderProviderControls();
+  }
+}
+
+/* =========================================================================
+   BROWSE CATALOG (CLIENT-SIDE FETCH)
+   ========================================================================= */
+async function loadBrowseCatalog() {
+  try {
+    const res = await fetch("https://moviepire.co/browse");
+    const json = await res.json();
+    browseData = json.data || json;
+
+    if (browseData.hero) {
+      const hero = browseData.hero;
+      document.getElementById("heroSection").style.display = "flex";
+      document.getElementById("heroBg").src = hero.images?.backdrop || "";
+      document.getElementById("heroTitle").innerText = hero.title || "Featured";
+      document.getElementById("heroDesc").innerText = hero.description || "";
+      document.getElementById("heroPlayBtn").onclick = () => openWatchPage({
+        id: hero.id,
+        title: hero.title,
+        title_en: hero.title,
+        type: hero.type || 'series'
+      });
+    }
+
+    renderCollections(browseData);
+
+  } catch (err) {
+    console.error("Browse API Error:", err);
+  }
+}
+
+function renderCollections(data) {
+  const container = document.getElementById("collectionsContainer");
+  container.innerHTML = "";
+  const dict = DICT[currentLang] || DICT.en;
+
+  const cols = data.collections || [];
+  cols.forEach(col => {
+    const block = document.createElement("div");
+    block.className = "collection-block";
+
+    let rawTitle = (col.title || "Collection").trim();
+    let displayTitle = rawTitle;
+
+    if (currentLang !== 'en') {
+      if (/trending movies/i.test(rawTitle)) displayTitle = dict.trendingMovies || rawTitle;
+      else if (/trending series/i.test(rawTitle)) displayTitle = dict.trendingSeries || rawTitle;
+      else if (/popular movies/i.test(rawTitle)) displayTitle = dict.popularMovies || rawTitle;
+      else if (/popular series/i.test(rawTitle)) displayTitle = dict.popularSeries || rawTitle;
+    }
+
+    const countText = `${col.items?.length || 0} ${dict.releases || 'RELEASES'}`;
+
+    block.innerHTML = `
+      <div class="collection-header">
+        <h3 class="collection-title">${displayTitle}</h3>
+        <span style="font-family: var(--font-mono); font-size: 11px; color: var(--text-muted);">${countText}</span>
+      </div>
+      <div class="movies-grid"></div>
+    `;
+
+    const grid = block.querySelector(".movies-grid");
+    (col.items || []).forEach(item => {
+      grid.appendChild(createCard(item));
+    });
+
+    container.appendChild(block);
+  });
+}
+
+/* =========================================================================
+   KINOBOX API HELPER (SUPPORTS CLOUDFLARE ORIGIN PROXY + DIRECT FALLBACK)
+   ========================================================================= */
+async function fetchKinobox(type, params = {}) {
+  const ts = Math.floor(Math.random() * 9000 + 1000);
+  const q = new URLSearchParams({ ...params, ts }).toString();
+
+  // 1. Спроба через Cloudflare Edge Function (працює на http: та https:)
+  if (window.location.protocol === 'http:' || window.location.protocol === 'https:') {
+    try {
+      const rProxy = await fetch(`/api/${type}?${q}`);
+      if (rProxy.ok) {
+        return await rProxy.json();
+      }
+    } catch (e) {}
+  }
+
+  // 2. Прямий виклик Kinobox API
+  try {
+    const directEndpoint = (type === 'search') 
+      ? `https://api.kinobox.tv/api/movies/search/?${q}`
+      : `https://api.kinobox.tv/api/players?${q}`;
+      
+    const rDirect = await fetch(directEndpoint);
+    if (rDirect.ok) {
+      return await rDirect.json();
+    }
+  } catch (e) {}
+
+  return null;
+}
+
+/* =========================================================================
+   SEARCH FUNCTION (AUTO-TRANSLATE TO EN + CONCURRENT VIDSRC & KINOBOX)
+   ========================================================================= */
+async function triggerSearch() {
+  const rawQ = document.getElementById("searchInput").value.trim();
+  const searchSec = document.getElementById("searchResultsSection");
+  const browseSec = document.getElementById("collectionsContainer");
+  const heroSec = document.getElementById("heroSection");
+  const historySec = document.getElementById("historySection");
+
+  if (!rawQ) {
+    searchSec.style.display = "none";
+    browseSec.style.display = "block";
+    renderWatchHistory();
+    if (heroSec.querySelector("img").src) heroSec.style.display = "flex";
+    return;
+  }
+
+  heroSec.style.display = "none";
+  browseSec.style.display = "none";
+  if (historySec) historySec.style.display = "none";
+  searchSec.style.display = "block";
+
+  const grid = document.getElementById("searchGrid");
+  grid.innerHTML = '<div style="grid-column: 1/-1; padding: 40px 0; color: var(--text-muted); font-family: var(--font-mono);"><span class="spinner"></span> SEARCHING & LINKING GLOBAL METADATA...</div>';
+
+  const cleanQ = rawQ.replace(/[\-_/\\:]+/g, " ").trim();
+  let rawList = [];
+  const promises = [];
+
+  // Якщо пошуковий запит містить не-латинські символи, перекладаємо перед пошуком на англійську для TMDB
+  const isNonAscii = /[^\x00-\x7F]/.test(cleanQ);
+  let enQuery = cleanQ;
+
+  if (isNonAscii) {
+    try {
+      const trRes = await translateWithMyMemory(cleanQ, 'en');
+      if (trRes && trRes.trim() && trRes.toLowerCase() !== cleanQ.toLowerCase()) {
+        enQuery = trRes.trim();
+      }
+    } catch(e) {}
+  }
+
+  // 1. Пошук MoviePire / TMDB / VidSrc (за оригінальним та перекладеним запитом)
+  if (currentProvider === 'all' || currentProvider === 'vidsrc') {
+    const queriesToTry = (enQuery !== cleanQ) ? [cleanQ, enQuery] : [cleanQ];
+    queriesToTry.forEach(qStr => {
+      promises.push(
+        fetch(`https://moviepire.co/search?q=${encodeURIComponent(qStr)}`)
+          .then(r => r.json())
+          .then(json => {
+            const items = json.data || json.results || json || [];
+            if (Array.isArray(items)) {
+              items.forEach(it => {
+                rawList.push({
+                  id: it.id,
+                  kp_id: null,
+                  title: it.title || it.name || 'Movie',
+                  title_en: it.title || it.name || 'Movie',
+                  poster: it.poster || it.image,
+                  rating: it.rating,
+                  rating_tmdb: it.vote_average || it.rating,
+                  rating_kp: null,
+                  year: it.year || '',
+                  type: it.type || 'movie',
+                  provider: 'vidsrc'
+                });
+              });
+            }
+          })
+          .catch(() => {})
+      );
+    });
+  }
+
+  // 2. Пошук Kinobox API (автоматично прив'язуємо до чистої англійської назви original)
+  if (currentProvider === 'all' || currentProvider === 'kinobox') {
+    promises.push(
+      fetchKinobox('search', { query: cleanQ })
+        .then(json => {
+          const items = json?.data?.items || json?.items || [];
+          if (Array.isArray(items)) {
+            items.forEach(it => {
+              const enTitle = it.title?.original || it.title?.russian || 'Film';
+              rawList.push({
+                id: null,
+                kp_id: it.id,
+                title: enTitle,
+                title_en: enTitle,
+                poster: it.gallery?.posterUrl,
+                rating: it.rating?.kinopoisk?.value || it.rating?.tmdb?.value || '8.0',
+                rating_kp: it.rating?.kinopoisk?.value || null,
+                rating_imdb: it.rating?.imdb?.value || null,
+                rating_tmdb: it.rating?.tmdb?.value || null,
+                year: it.year || '',
+                type: it.type === 'Series' ? 'series' : 'movie',
+                provider: 'kinobox'
+              });
+            });
+          }
+        })
+        .catch(() => {})
+      );
+  }
+
+  await Promise.all(promises);
+
+  // 3. Розумне об'єднання та дедуплікація за англійською назвою та роком
+  const mergedMap = new Map();
+
+  rawList.forEach(it => {
+    const titleKey = (it.title_en || it.title || '').toLowerCase().replace(/[^a-z0-9]/g, '');
+    const yearKey = (it.year ? String(it.year).slice(0, 4) : '');
+    const key = `${titleKey}_${yearKey}_${it.type}`;
+
+    if (!mergedMap.has(key)) {
+      mergedMap.set(key, { ...it });
+    } else {
+      const existing = mergedMap.get(key);
+      if (it.id && !existing.id) existing.id = it.id;
+      if (it.kp_id && !existing.kp_id) existing.kp_id = it.kp_id;
+      if (it.poster && (!existing.poster || existing.poster.includes('unsplash'))) existing.poster = it.poster;
+      if (it.rating && !existing.rating) existing.rating = it.rating;
+      if (it.rating_tmdb && !existing.rating_tmdb) existing.rating_tmdb = it.rating_tmdb;
+      if (it.rating_kp && !existing.rating_kp) existing.rating_kp = it.rating_kp;
+      if (it.rating_imdb && !existing.rating_imdb) existing.rating_imdb = it.rating_imdb;
+      if (it.year && !existing.year) existing.year = it.year;
+      existing.provider = 'both';
+    }
+  });
+
+  const combined = Array.from(mergedMap.values());
+
+  grid.innerHTML = "";
+  document.getElementById("searchStats").innerText = `${combined.length} ITEMS FOUND`;
+
+  if (combined.length === 0) {
+    grid.innerHTML = '<div style="grid-column: 1/-1; padding: 40px 0; color: var(--text-muted); font-family: var(--font-mono);">[ NO ITEMS FOUND ]</div>';
+    return;
+  }
+
+  combined.forEach(item => {
+    grid.appendChild(createCard(item));
+  });
+}
+
+function formatRatingBadge(item) {
+  const parts = [];
+
+  const rTmdb = item.rating_tmdb || (item.provider !== 'kinobox' ? item.rating : null);
+  if (rTmdb !== undefined && rTmdb !== null && rTmdb !== "") {
+    const num = parseFloat(rTmdb);
+    if (!isNaN(num) && num > 0) {
+      const pct = (num <= 10) ? Math.round(num * 10) : Math.round(num);
+      parts.push(`TMDB ${pct}%`);
+    }
+  }
+
+  const rKp = item.rating_kp || (item.provider === 'kinobox' ? item.rating : null);
+  if (rKp !== undefined && rKp !== null && rKp !== "") {
+    const num = parseFloat(rKp);
+    if (!isNaN(num) && num > 0) {
+      const val = (num > 10) ? (num / 10).toFixed(1) : num.toFixed(1);
+      parts.push(`KP ${val}`);
+    }
+  }
+
+  const rImdb = item.rating_imdb;
+  if (rImdb !== undefined && rImdb !== null && rImdb !== "") {
+    const num = parseFloat(rImdb);
+    if (!isNaN(num) && num > 0) {
+      const val = (num > 10) ? (num / 10).toFixed(1) : num.toFixed(1);
+      parts.push(`IMDb ${val}`);
+    }
+  }
+
+  if (parts.length === 0) {
+    if (item.rating) {
+      const num = parseFloat(item.rating);
+      if (!isNaN(num) && num > 0) {
+        const pct = (num <= 10) ? Math.round(num * 10) : Math.round(num);
+        return `★ TMDB ${pct}%`;
+      }
+    }
+    return `★ TMDB 80%`;
+  }
+
+  return `★ ${parts.join(' • ')}`;
+}
+
+function formatSidebarRating(item) {
+  const parts = [];
+
+  const rTmdb = item.rating_tmdb || (item.provider !== 'kinobox' ? item.rating : null);
+  if (rTmdb !== undefined && rTmdb !== null && rTmdb !== "") {
+    const num = parseFloat(rTmdb);
+    if (!isNaN(num) && num > 0) {
+      const pct = (num <= 10) ? Math.round(num * 10) : Math.round(num);
+      parts.push(`TMDB ${pct}%`);
+    }
+  }
+
+  const rKp = item.rating_kp || (item.provider === 'kinobox' ? item.rating : null);
+  if (rKp !== undefined && rKp !== null && rKp !== "") {
+    const num = parseFloat(rKp);
+    if (!isNaN(num) && num > 0) {
+      const val = (num > 10) ? (num / 10).toFixed(1) : num.toFixed(1);
+      parts.push(`KP ${val}`);
+    }
+  }
+
+  const rImdb = item.rating_imdb;
+  if (rImdb !== undefined && rImdb !== null && rImdb !== "") {
+    const num = parseFloat(rImdb);
+    if (!isNaN(num) && num > 0) {
+      const val = (num > 10) ? (num / 10).toFixed(1) : num.toFixed(1);
+      parts.push(`IMDb ${val}`);
+    }
+  }
+
+  if (parts.length === 0) {
+    if (item.rating) {
+      const num = parseFloat(item.rating);
+      if (!isNaN(num) && num > 0) {
+        const pct = (num <= 10) ? Math.round(num * 10) : Math.round(num);
+        return `TMDB ${pct}%`;
+      }
+    }
+    return 'TMDB 80%';
+  }
+
+  return parts.join(' • ');
+}
+
+function createCard(item) {
+  const card = document.createElement("div");
+  card.className = "movie-card";
+  card.onclick = () => openWatchPage(item);
+
+  const dict = DICT[currentLang] || DICT.en;
+  const isTv = (item.type === 'tv' || item.type === 'series');
+  const typeLabel = isTv ? dict.lblSeries : dict.lblMovie;
+
+  const posterSrc = item.poster || "https://images.unsplash.com/photo-1489599849927-2ee91cede3ba?w=400&q=80";
+  const ratingBadge = formatRatingBadge(item);
+  const displayTitle = item.title_en || item.title || item.name || "Movie";
+
+  let provTag = '[VIDSRC]';
+  if (item.provider === 'both') {
+    provTag = '[VIDSRC • KINOBOX]';
+  } else if (item.provider === 'kinobox') {
+    provTag = '[KINOBOX]';
+  }
+
+  card.innerHTML = `
+    <div class="poster-box">
+      <img src="${posterSrc}" alt="${displayTitle}" class="poster-img" loading="lazy" onerror="this.src='https://images.unsplash.com/photo-1489599849927-2ee91cede3ba?w=400&q=80'" />
+      <span class="badge-provider">${provTag}</span>
+      <span class="badge-rating">${ratingBadge}</span>
+    </div>
+    <div class="card-info">
+      <div class="card-title" title="${displayTitle}">${displayTitle}</div>
+      <div class="card-meta">
+        <span>${item.year || '2026'}</span>
+        <span>${typeLabel}</span>
+      </div>
+    </div>
+  `;
+  return card;
+}
+
+/* =========================================================================
+   DEDICATED WATCH PAGE FUNCTIONS (PURE CLIENT-SIDE)
+   ========================================================================= */
+async function openWatchPage(item, updateHash = true) {
+  if (!item.id && item.title) {
+    try {
+      const rTmdb = await fetch(`https://moviepire.co/search?q=${encodeURIComponent(item.title_en || item.title)}`);
+      const tmdbJson = await rTmdb.json();
+      const tmdbItems = tmdbJson.data || tmdbJson.results || tmdbJson || [];
+      if (tmdbItems.length > 0) {
+        item.id = tmdbItems[0].id;
+        if (!item.poster || item.poster.includes('unsplash')) {
+          item.poster = tmdbItems[0].poster || tmdbItems[0].image;
+        }
+        if (tmdbItems[0].vote_average || tmdbItems[0].rating) {
+          item.rating_tmdb = tmdbItems[0].vote_average || tmdbItems[0].rating;
+        }
+      }
+    } catch(e) {}
+  }
+
+  currentItem = item;
+  renderWatchPage(item, updateHash);
+}
+
+function openWatchPageFromParams(params) {
+  const item = {
+    id: params.get("id") || "969681",
+    kp_id: params.get("kp_id") || null,
+    title: params.get("title") || "Movie",
+    title_en: params.get("title") || "Movie",
+    year: params.get("year") || "2026",
+    rating: params.get("rating") || "8.0",
+    rating_tmdb: params.get("rating_tmdb") || null,
+    rating_kp: params.get("rating_kp") || null,
+    type: params.get("type") || "movie",
+    poster: params.get("poster") || ""
+  };
+  openWatchPage(item, false);
+}
+
+function renderWatchPage(item, updateHash = true) {
+  currentItem = item;
+
+  document.getElementById("homePageView").style.display = "none";
+  document.getElementById("watchPageView").style.display = "block";
+  document.getElementById("btnBackToHome").style.display = "inline-block";
+  window.scrollTo(0, 0);
+
+  const dict = DICT[currentLang] || DICT.en;
+  const isTv = (item.type === 'tv' || item.type === 'series');
+
+  updateWatchSidebarTitles();
+  document.getElementById("watchPoster").src = item.poster || "https://images.unsplash.com/photo-1489599849927-2ee91cede3ba?w=400&q=80";
+  document.getElementById("watchYear").innerText = item.year || '2026';
+  document.getElementById("watchRating").innerText = formatSidebarRating(item);
+  document.getElementById("watchType").innerText = isTv ? dict.lblSeries : dict.lblMovie;
+  document.getElementById("watchSources").innerText = dict.sourcesVal;
+  
+  const lblY = document.getElementById("lblYear");
+  if (lblY) lblY.innerText = dict.lblYear;
+  const lblR = document.getElementById("lblRating");
+  if (lblR) lblR.innerText = dict.lblRating;
+  const lblT = document.getElementById("lblType");
+  if (lblT) lblT.innerText = dict.lblType;
+  const lblS = document.getElementById("lblSources");
+  if (lblS) lblS.innerText = dict.lblSources;
+
+  document.getElementById("watchSynopsis").innerText = item.description || item.overview || 'Loading movie synopsis and details...';
+  document.getElementById("primarySelectorList").innerHTML = '<span class="spinner"></span> LOADING...';
+  document.getElementById("subtitlesList").innerHTML = '—';
+
+  if (updateHash) {
+    const queryParams = new URLSearchParams({
+      id: item.id || '',
+      kp_id: item.kp_id || '',
+      title: item.title || item.title_en || '',
+      type: item.type || 'movie',
+      poster: item.poster || ''
+    });
+    window.location.hash = `watch?${queryParams.toString()}`;
+  }
+
+  // Зберігаємо в історію переглядів
+  addToWatchHistory(item);
+
+  // Якщо обрана українська мова — за замовчуванням вмикається KINOBOX, інакше VIDSRC
+  activeProvider = (currentLang === 'uk') ? 'kinobox' : (item.provider === 'kinobox' ? 'kinobox' : 'vidsrc');
+  selectedBalancerIndex = 0;
+  switchProvider(activeProvider);
+  loadSubtitles(item.id, item.type || 'movie');
+  loadMovieDetails(item.id, item.type || 'movie');
+}
+
+async function loadMovieDetails(id, type) {
+  if (!id) return;
+  const dict = DICT[currentLang] || DICT.en;
+  const ep = (type === 'series' || type === 'tv') ? 'series' : 'movie';
+  try {
+    const res = await fetch(`https://moviepire.co/${ep}/${id}`);
+    const json = await res.json();
+    const data = json.data || json;
+    if (data) {
+      const desc = data.description || data.overview;
+      if (desc) {
+        currentOriginalSynopsis = desc;
+        currentTranslatedSynopsis = null;
+        isSynopsisTranslated = false;
+        document.getElementById("watchSynopsis").innerText = desc;
+        const btn = document.getElementById("btnTranslateSynopsis");
+        if (btn) {
+          btn.innerText = dict.btnTranslate;
+          btn.classList.remove("active");
+        }
+      } else {
+        currentOriginalSynopsis = "No extended synopsis available for this title.";
+        document.getElementById("watchSynopsis").innerText = currentOriginalSynopsis;
+      }
+      if (data.year) document.getElementById("watchYear").innerText = data.year;
+      if (data.rating || data.vote_average) {
+        currentItem.rating_tmdb = data.vote_average || data.rating;
+        document.getElementById("watchRating").innerText = formatSidebarRating(currentItem);
+      }
+      if (data.title && !currentItem.title) {
+        currentItem.title = data.title;
+        updateWatchSidebarTitles();
+      }
+    }
+  } catch (err) {
+    const cur = document.getElementById("watchSynopsis").innerText;
+    if (!cur || cur.includes("Loading")) {
+      currentOriginalSynopsis = "Full movie synopsis available via streaming players.";
+      document.getElementById("watchSynopsis").innerText = currentOriginalSynopsis;
+    }
+  }
+}
+
+async function toggleSynopsisTranslation() {
+  const btn = document.getElementById("btnTranslateSynopsis");
+  const synopsisEl = document.getElementById("watchSynopsis");
+  const dict = DICT[currentLang] || DICT.en;
+
+  if (!currentOriginalSynopsis || currentOriginalSynopsis.includes("Loading")) {
+    return;
+  }
+
+  if (isSynopsisTranslated) {
+    synopsisEl.innerText = currentOriginalSynopsis;
+    isSynopsisTranslated = false;
+    btn.innerText = dict.btnTranslate;
+    btn.classList.remove("active");
+  } else {
+    if (currentTranslatedSynopsis) {
+      synopsisEl.innerText = currentTranslatedSynopsis;
+      isSynopsisTranslated = true;
+      btn.innerText = dict.btnOriginal;
+      btn.classList.add("active");
+    } else {
+      btn.innerText = dict.btnTranslating;
+      btn.disabled = true;
+
+      const targetLang = currentLang || 'uk';
+      const translated = await translateWithMyMemory(currentOriginalSynopsis, targetLang);
+      
+      btn.disabled = false;
+      if (translated) {
+        currentTranslatedSynopsis = translated;
+        synopsisEl.innerText = currentTranslatedSynopsis;
+        isSynopsisTranslated = true;
+        btn.innerText = dict.btnOriginal;
+        btn.classList.add("active");
+      } else {
+        btn.innerText = dict.btnError;
+        setTimeout(() => {
+          btn.innerText = dict.btnTranslate;
+        }, 2000);
+      }
+    }
+  }
+}
+
+async function translateWithMyMemory(text, targetLang = 'uk') {
+  try {
+    const words = text.split(' ');
+    const chunks = [];
+    let curr = [];
+    let currLen = 0;
+
+    for (const w of words) {
+      if (currLen + w.length + 1 > 380) {
+        chunks.push(curr.join(' '));
+        curr = [w];
+        currLen = w.length;
+      } else {
+        curr.push(w);
+        currLen += w.length + 1;
+      }
+    }
+    if (curr.length > 0) chunks.push(curr.join(' '));
+
+    const promises = chunks.map(async chunk => {
+      try {
+        const url = `https://api.mymemory.translated.net/get?q=${encodeURIComponent(chunk)}&langpair=en|${targetLang}`;
+        const res = await fetch(url);
+        const data = await res.json();
+        let rawText = data?.responseData?.translatedText || chunk;
+        const txt = document.createElement("textarea");
+        txt.innerHTML = rawText;
+        return txt.value;
+      } catch(e) {
+        return chunk;
+      }
+    });
+
+    const results = await Promise.all(promises);
+    return results.join(' ');
+  } catch (err) {
+    console.error("MyMemory Translation Error:", err);
+    return null;
+  }
+}
+
+function updateWatchSidebarTitles() {
+  if (!currentItem) return;
+  const displayTitle = currentItem.title_en || currentItem.title || currentItem.name || 'Movie';
+  document.getElementById("watchTitle").innerText = displayTitle;
+  document.getElementById("watchOrigTitle").innerText = currentItem.title_en || currentItem.title || '';
+  document.title = `${displayTitle} — FastFilm`;
+}
+
+function switchProvider(prov) {
+  activeProvider = prov;
+  selectedBalancerIndex = 0;
+
+  document.querySelectorAll(".prov-tab-btn").forEach(b => b.classList.remove("active"));
+  if (prov === 'vidsrc') document.getElementById("tabVidSrc").classList.add("active");
+  if (prov === 'kinobox') document.getElementById("tabKinobox").classList.add("active");
+
+  renderProviderControls();
+}
+
+async function renderProviderControls() {
+  const dict = DICT[currentLang] || DICT.en;
+  const primaryList = document.getElementById("primarySelectorList");
+  const subsContainer = document.getElementById("subsContainer");
+
+  primaryList.innerHTML = "";
+  subsContainer.style.display = 'none';
+
+  if (activeProvider === 'kinobox') {
+    document.getElementById("labelPrimarySelector").innerText = dict.primaryKinobox;
+    primaryList.innerHTML = '<span class="spinner"></span> LOADING KINOBOX PLAYERS (ALLOHA, VIDEOSEED, COLLAPS)...';
+
+    let kpId = currentItem.kp_id;
+
+    try {
+      // 1. Якщо kp_id ще не встановлено, шукаємо за англійською назвою в Kinobox та звіряємо з TMDB
+      if (!kpId) {
+        const engTitle = (currentItem.title_en || currentItem.title || "").trim();
+        const cleanTitle = engTitle.replace(/[:\-]+/g, " ").trim();
+        const baseTitle = cleanTitle.split(" ")[0];
+        const targetYear = currentItem.year ? String(currentItem.year).slice(0, 4) : "";
+        const targetTmdb = currentItem.id ? String(currentItem.id) : "";
+
+        const queries = [engTitle, cleanTitle, baseTitle].filter(Boolean);
+
+        for (const q of queries) {
+          const searchData = await fetchKinobox('search', { query: q });
+          const items = searchData?.data?.items || searchData?.items || [];
+          if (items.length > 0) {
+            // Звіряємо фільм за TMDB ID або title.original + роком
+            let match = items.find(it => {
+              if (targetTmdb && (it.id_tmdb === targetTmdb || it.sources?.tmdb === targetTmdb)) return true;
+              const itOrig = normalizeTitleKey(it.title?.original || it.title?.russian);
+              const curOrig = normalizeTitleKey(engTitle);
+              const yearMatch = targetYear && it.year ? String(it.year).startsWith(targetYear) : true;
+              return (itOrig === curOrig || itOrig.includes(curOrig) || curOrig.includes(itOrig)) && yearMatch;
+            }) || items[0];
+
+            if (match) {
+              kpId = match.id;
+              currentItem.kp_id = kpId;
+              if (match.rating?.kinopoisk?.value) {
+                currentItem.rating_kp = match.rating.kinopoisk.value;
+              }
+              if (match.rating?.imdb?.value) {
+                currentItem.rating_imdb = match.rating.imdb.value;
+              }
+              if (match.rating?.tmdb?.value) {
+                currentItem.rating_tmdb = match.rating.tmdb.value;
+              }
+              document.getElementById("watchRating").innerText = formatSidebarRating(currentItem);
+              break;
+            }
+          }
+        }
+      }
+
+      // 2. Стандартний запит до Kinobox Players API
+      const queryParams = {};
+      if (kpId) queryParams.kinopoisk = kpId;
+      if (currentItem.id) queryParams.tmdb = currentItem.id;
+      if (currentItem.title_en || currentItem.title) queryParams.title = currentItem.title_en || currentItem.title;
+
+      const playersData = await fetchKinobox('players', queryParams);
+      const players = playersData?.data || [];
+
+      primaryList.innerHTML = "";
+
+      if (players && players.length > 0) {
+        players.forEach((player, idx) => {
+          const btn = document.createElement("button");
+          btn.className = `item-btn ${idx === selectedBalancerIndex ? 'active' : ''}`;
+          btn.innerText = `[ ${player.type || 'Balancer ' + (idx + 1)} ]`;
+          btn.onclick = () => {
+            selectedBalancerIndex = idx;
+            document.querySelectorAll("#primarySelectorList .item-btn").forEach(b => b.classList.remove("active"));
+            btn.classList.add("active");
+            if (player.iframeUrl) setIframe(player.iframeUrl);
+          };
+          primaryList.appendChild(btn);
+        });
+
+        const initialPlayer = players[selectedBalancerIndex] || players[0];
+        if (initialPlayer && initialPlayer.iframeUrl) {
+          setIframe(initialPlayer.iframeUrl);
+        }
+      } else {
+        primaryList.innerHTML = '<span style="color:var(--text-muted); font-size:11px;">[ KINOBOX: NO BALANCERS RETURNED BY API (AVAILABLE VIA HOSTED CLOUDFLARE PAGES) ]</span>';
+      }
+
+    } catch (err) {
+      console.error("Kinobox Balancers Load Error:", err);
+      primaryList.innerHTML = '<span style="color:var(--text-muted); font-size:11px;">[ KINOBOX API ERROR // TRY HOSTED VERSION ON CLOUDFLARE PAGES ]</span>';
+    }
+  } else {
+    // VIDSRC PROVIDER
+    document.getElementById("labelPrimarySelector").innerText = dict.primaryVidsrc;
+    subsContainer.style.display = 'block';
+
+    const id = currentItem.id || '969681';
+    const type = currentItem.type || 'movie';
+
+    const streams = VIDSRC_SERVERS.map(srv => ({
+      name: srv.name,
+      iframe_url: buildStreamUrl(srv, id, type)
+    }));
+
+    streams.forEach((st, idx) => {
+      const btn = document.createElement("button");
+      btn.className = `item-btn ${idx === 0 ? 'active' : ''}`;
+      btn.innerText = `[ ${st.name} ]`;
+      btn.onclick = () => {
+        document.querySelectorAll("#primarySelectorList .item-btn").forEach(b => b.classList.remove("active"));
+        btn.classList.add("active");
+        setIframe(st.iframe_url);
+      };
+      primaryList.appendChild(btn);
+    });
+
+    if (streams.length > 0) {
+      setIframe(streams[0].iframe_url);
+    }
+  }
+}
+
+async function loadSubtitles(id, type) {
+  const subList = document.getElementById("subtitlesList");
+  subList.innerHTML = '<span class="sub-tag"><span class="spinner"></span> LOADING SUBTITLES...</span>';
+
+  try {
+    const isTv = (type === "tv" || type === "series");
+    const subEndpoint = isTv 
+      ? `https://core.vidzee.wtf/subs/tv/${id}/1/1`
+      : `https://core.vidzee.wtf/subs/movie/${id}`;
+
+    const res = await fetch(subEndpoint);
+    const json = await res.json();
+    const subs = json.data || json || [];
+
+    subList.innerHTML = "";
+
+    if (!Array.isArray(subs) || subs.length === 0) {
+      subList.innerHTML = '<span class="sub-tag">[ NO EXTERNAL SUBS ]</span>';
+      return;
+    }
+
+    const counts = {};
+    subs.forEach(s => {
+      const rawLbl = (s.label || s.language || s.lang || 'SUB').trim();
+      counts[rawLbl] = (counts[rawLbl] || 0) + 1;
+    });
+
+    const seenCounts = {};
+    subs.forEach(s => {
+      const rawLbl = (s.label || s.language || s.lang || 'SUB').trim();
+      const fileUrl = s.file || s.url || '#';
+      seenCounts[rawLbl] = (seenCounts[rawLbl] || 0) + 1;
+
+      let displayLabel = rawLbl.toUpperCase();
+      if (counts[rawLbl] > 1) {
+        displayLabel = `${rawLbl.toUpperCase()} #${seenCounts[rawLbl]}`;
+      }
+
+      const a = document.createElement("a");
+      a.className = "sub-tag";
+      a.href = fileUrl;
+      a.target = "_blank";
+      a.rel = "noopener noreferrer";
+      a.innerText = `[ ${displayLabel} ]`;
+      subList.appendChild(a);
+    });
+  } catch (err) {
+    subList.innerHTML = '<span class="sub-tag">[ SUBS AVAILABLE IN PLAYER ]</span>';
+  }
+}
+
+function setIframe(url) {
+  const iframe = document.getElementById("videoIframe");
+  if (iframe) iframe.src = url;
+}
+
+/* =========================================================================
+   AD-BLOCKER DETECTOR MODULE
+   ========================================================================= */
+function detectAdBlock() {
+  const isIgnored = localStorage.getItem("fastfilm_adblock_ignore");
+  if (isIgnored === "true") return;
+
+  const bait = document.createElement("div");
+  bait.className = "ad-box pub_300x250 pub_300x250m pub_728x90 text-ad textAd text_ad text_ads text-ads text-ad-links";
+  bait.style.cssText = "width: 1px !important; height: 1px !important; position: absolute !important; left: -10000px !important; top: -1000px !important;";
+  document.body.appendChild(bait);
+
+  setTimeout(() => {
+    const isBlocked = (
+      bait.offsetParent === null ||
+      bait.offsetHeight === 0 ||
+      bait.offsetLeft === 0 ||
+      bait.offsetTop === 0 ||
+      bait.offsetWidth === 0 ||
+      bait.clientHeight === 0 ||
+      bait.clientWidth === 0 ||
+      window.getComputedStyle(bait).getPropertyValue('display') === 'none' ||
+      window.getComputedStyle(bait).getPropertyValue('visibility') === 'hidden'
+    );
+
+    document.body.removeChild(bait);
+
+    if (isBlocked) {
+      showAdblockModal();
+    }
+  }, 350);
+}
+
+function showAdblockModal() {
+  const modal = document.getElementById("adblockModal");
+  if (modal) modal.style.display = "flex";
+}
+
+function closeAdblockModal(permanent = false) {
+  if (permanent) {
+    localStorage.setItem("fastfilm_adblock_ignore", "true");
+  }
+  const modal = document.getElementById("adblockModal");
+  if (modal) modal.style.display = "none";
+}
