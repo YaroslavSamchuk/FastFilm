@@ -139,8 +139,8 @@ let DICT = {
     releases: "RELEASES",
     adblockTag: "[ RECOMMENDATION // AD-BLOCKER ]",
     adblockTitle: "Enable an AdBlocker for a Clean Experience",
-    adblockDesc: "Third-party video streaming servers may display intrusive popups and casino redirects. We strongly recommend installing uBlock Origin or using Brave Browser for uninterrupted, ad-free playback.",
-    adblockInstall: "[ GET UBLOCK ORIGIN ]",
+    adblockDesc: "Third-party video streaming servers may display intrusive popups and casino redirects. We strongly recommend installing AdBlock or using Brave Browser for uninterrupted, ad-free playback.",
+    adblockInstall: "[ GET ADBLOCK ]",
     adblockClose: "[ CONTINUE ]",
     adblockDontShow: "[ DON'T REMIND AGAIN ]"
   },
@@ -179,8 +179,8 @@ let DICT = {
     releases: "РЕЛІЗІВ",
     adblockTag: "[ РЕКОМЕНДАЦІЯ // АНТИРЕКЛАМА ]",
     adblockTitle: "Увімкніть AdBlocker для чистого перегляду без реклами",
-    adblockDesc: "Сторонні стрімінг-сервери можуть показувати нав'язливу спливаючу рекламу та казино-редиректи при кліку на Play. Рекомендуємо встановити розширення uBlock Origin або використовувати браузер Brave для максимального захисту.",
-    adblockInstall: "[ ВСТАНОВИТИ UBLOCK ORIGIN ]",
+    adblockDesc: "Сторонні стрімінг-сервери можуть показувати нав'язливу спливаючу рекламу та казино-редиректи при кліку на Play. Рекомендуємо встановити розширення AdBlock або використовувати браузер Brave для максимального захисту.",
+    adblockInstall: "[ ВСТАНОВИТИ ADBLOCK ]",
     adblockClose: "[ ПРОДОВЖИТИ ]",
     adblockDontShow: "[ БІЛЬШЕ НЕ НАГАДУВАТИ ]"
   }
@@ -1241,30 +1241,9 @@ function detectAdBlock() {
   const isIgnored = localStorage.getItem("fastfilm_adblock_recommend_dismissed") || localStorage.getItem("fastfilm_adblock_ignore");
   if (isIgnored === "true") return;
 
-  const bait = document.createElement("div");
-  bait.className = "ad-box pub_300x250 pub_300x250m pub_728x90 text-ad textAd text_ad text_ads text-ads text-ad-links banner-ad ad-banner";
-  bait.style.cssText = "width: 1px !important; height: 1px !important; position: absolute !important; left: -10000px !important; top: -1000px !important;";
-  document.body.appendChild(bait);
-
+  // Показуємо модальне вікно при кожному вході, доки користувач не натисне "Більше не показувати"
   setTimeout(() => {
-    const isBlocked = (
-      bait.offsetParent === null ||
-      bait.offsetHeight === 0 ||
-      bait.offsetLeft === 0 ||
-      bait.offsetTop === 0 ||
-      bait.offsetWidth === 0 ||
-      bait.clientHeight === 0 ||
-      bait.clientWidth === 0 ||
-      window.getComputedStyle(bait).getPropertyValue('display') === 'none' ||
-      window.getComputedStyle(bait).getPropertyValue('visibility') === 'hidden'
-    );
-
-    document.body.removeChild(bait);
-
-    // Якщо реклама НЕ блокується (тобто AdBlock НЕ увімкнено) — рекомендуємо користувачу встановити його
-    if (!isBlocked) {
-      showAdblockModal();
-    }
+    showAdblockModal();
   }, 400);
 }
 
