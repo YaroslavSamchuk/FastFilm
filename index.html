@@ -109,13 +109,14 @@
       <div class="player-column">
         <!-- 16:9 THEATER -->
         <div class="player-theater-box">
-          <iframe id="videoIframe" class="player-iframe" allow="autoplay; fullscreen; picture-in-picture; encrypted-media"></iframe>
+          <iframe id="videoIframe" class="player-iframe" sandbox="allow-scripts allow-same-origin allow-forms allow-presentation" allow="autoplay; fullscreen; picture-in-picture; encrypted-media"></iframe>
         </div>
 
         <!-- PROVIDER SELECTOR TABS -->
         <div class="provider-select-bar">
           <button id="tabVidSrc" class="prov-tab-btn active" onclick="switchProvider('vidsrc')">[ 01. VIDSRC ]</button>
           <button id="tabKinobox" class="prov-tab-btn" onclick="switchProvider('kinobox')">[ 02. KINOBOX ]</button>
+          <button id="btnAdShield" class="adshield-btn active" onclick="toggleAdShield()" title="Block Casino & Betting Popups/Redirects">[ 🛡️ AD-SHIELD: ON ]</button>
         </div>
 
         <!-- CONTROLS PANEL -->

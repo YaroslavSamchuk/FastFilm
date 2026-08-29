@@ -685,15 +685,6 @@ async function triggerSearch() {
 function formatRatingBadge(item) {
   const parts = [];
 
-  const rTmdb = item.rating_tmdb || (item.provider !== 'kinobox' ? item.rating : null);
-  if (rTmdb !== undefined && rTmdb !== null && rTmdb !== "") {
-    const num = parseFloat(rTmdb);
-    if (!isNaN(num) && num > 0) {
-      const pct = (num <= 10) ? Math.round(num * 10) : Math.round(num);
-      parts.push(`TMDB ${pct}%`);
-    }
-  }
-
   const rKp = item.rating_kp || (item.provider === 'kinobox' ? item.rating : null);
   if (rKp !== undefined && rKp !== null && rKp !== "") {
     const num = parseFloat(rKp);
@@ -703,7 +694,7 @@ function formatRatingBadge(item) {
     }
   }
 
-  const rImdb = item.rating_imdb;
+  const rImdb = item.rating_imdb || (item.provider !== 'kinobox' && item.rating && !item.rating_kp ? item.rating : null);
   if (rImdb !== undefined && rImdb !== null && rImdb !== "") {
     const num = parseFloat(rImdb);
     if (!isNaN(num) && num > 0) {
@@ -716,11 +707,11 @@ function formatRatingBadge(item) {
     if (item.rating) {
       const num = parseFloat(item.rating);
       if (!isNaN(num) && num > 0) {
-        const pct = (num <= 10) ? Math.round(num * 10) : Math.round(num);
-        return `★ TMDB ${pct}%`;
+        const val = (num > 10) ? (num / 10).toFixed(1) : num.toFixed(1);
+        return `★ IMDb ${val}`;
       }
     }
-    return `★ TMDB 80%`;
+    return `★ 8.0`;
   }
 
   return `★ ${parts.join(' • ')}`;
@@ -729,15 +720,6 @@ function formatRatingBadge(item) {
 function formatSidebarRating(item) {
   const parts = [];
 
-  const rTmdb = item.rating_tmdb || (item.provider !== 'kinobox' ? item.rating : null);
-  if (rTmdb !== undefined && rTmdb !== null && rTmdb !== "") {
-    const num = parseFloat(rTmdb);
-    if (!isNaN(num) && num > 0) {
-      const pct = (num <= 10) ? Math.round(num * 10) : Math.round(num);
-      parts.push(`TMDB ${pct}%`);
-    }
-  }
-
   const rKp = item.rating_kp || (item.provider === 'kinobox' ? item.rating : null);
   if (rKp !== undefined && rKp !== null && rKp !== "") {
     const num = parseFloat(rKp);
@@ -747,7 +729,7 @@ function formatSidebarRating(item) {
     }
   }
 
-  const rImdb = item.rating_imdb;
+  const rImdb = item.rating_imdb || (item.provider !== 'kinobox' && item.rating && !item.rating_kp ? item.rating : null);
   if (rImdb !== undefined && rImdb !== null && rImdb !== "") {
     const num = parseFloat(rImdb);
     if (!isNaN(num) && num > 0) {
@@ -760,11 +742,11 @@ function formatSidebarRating(item) {
     if (item.rating) {
       const num = parseFloat(item.rating);
       if (!isNaN(num) && num > 0) {
-        const pct = (num <= 10) ? Math.round(num * 10) : Math.round(num);
-        return `TMDB ${pct}%`;
+        const val = (num > 10) ? (num / 10).toFixed(1) : num.toFixed(1);
+        return `IMDb ${val}`;
       }
     }
-    return 'TMDB 80%';
+    return '8.0';
   }
 
   return parts.join(' • ');
@@ -927,7 +909,7 @@ async function loadMovieDetails(id, type) {
       }
       if (data.year) document.getElementById("watchYear").innerText = data.year;
       if (data.rating || data.vote_average) {
-        currentItem.rating_tmdb = data.vote_average || data.rating;
+        if (!currentItem.rating_imdb) currentItem.rating_imdb = data.vote_average || data.rating;
         document.getElementById("watchRating").innerText = formatSidebarRating(currentItem);
       }
       if (data.title && !currentItem.title) {
@@ -1224,10 +1206,53 @@ async function loadSubtitles(id, type) {
   }
 }
 
+let isAdShieldActive = true;
+
+function toggleAdShield() {
+  isAdShieldActive = !isAdShieldActive;
+  const btn = document.getElementById("btnAdShield");
+  if (btn) {
+    if (isAdShieldActive) {
+      btn.innerText = "[ 🛡️ AD-SHIELD: ON ]";
+      btn.classList.remove("disabled");
+      btn.classList.add("active");
+    } else {
+      btn.innerText = "[ ⚠️ AD-SHIELD: OFF ]";
+      btn.classList.remove("active");
+      btn.classList.add("disabled");
+    }
+  }
+  const iframe = document.getElementById("videoIframe");
+  if (iframe && iframe.src) {
+    setIframe(iframe.src);
+  }
+}
+
 function setIframe(url) {
   const iframe = document.getElementById("videoIframe");
-  if (iframe) iframe.src = url;
+  if (!iframe) return;
+
+  if (isAdShieldActive) {
+    // Повністю блокує відкриття казино-попапів (window.open) та перенаправлення сайту (top navigation)
+    iframe.setAttribute("sandbox", "allow-scripts allow-same-origin allow-forms allow-presentation");
+  } else {
+    iframe.removeAttribute("sandbox");
+  }
+
+  iframe.src = url;
 }
+
+// Глобальне перехоплення спливаючих вікон казино
+try {
+  const originalWindowOpen = window.open;
+  window.open = function(url, target, features) {
+    if (isAdShieldActive) {
+      console.warn("[FastFilm Ad-Shield] Blocked popup attempt to:", url);
+      return null;
+    }
+    return originalWindowOpen.apply(this, arguments);
+  };
+} catch (e) {}
 
 /* =========================================================================
    AD-BLOCKER DETECTOR MODULE
