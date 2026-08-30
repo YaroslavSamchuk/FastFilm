@@ -197,6 +197,7 @@ document.addEventListener("DOMContentLoaded", async () => {
   }
   handleRoute();
   detectAdBlock();
+  sanitizeAndMigrateWatchHistory();
 
   window.addEventListener("hashchange", () => {
     handleRoute();
@@ -362,6 +363,87 @@ function renderWatchHistory() {
   });
 }
 
+/* =========================================================================
+   WATCH HISTORY ASYNC TMDB AUTO-CONVERTER & SANITIZER
+   ========================================================================= */
+async function sanitizeAndMigrateWatchHistory() {
+  const history = getWatchHistory();
+  if (!history || history.length === 0) return;
+
+  let needsSave = false;
+
+  const migratedItems = await Promise.all(history.map(async (item) => {
+    if (!item) return null;
+
+    const posterStr = String(item.poster || "");
+    const isBadPoster = !posterStr || posterStr.includes("unsplash") || posterStr.includes("yandex") || posterStr.includes("kinopoisk");
+    const isMissingId = !item.id || String(item.id).startsWith("undefined") || String(item.id).length < 2;
+    const isNonAscii = /[^\x00-\x7F]/.test(item.title || "");
+
+    // Якщо все чисто, валідно і є TMDB ID — залишаємо як є
+    if (!isMissingId && !isBadPoster && !isNonAscii) {
+      return item;
+    }
+
+    // Інакше — асинхронно знаходимо канонічний TMDB фільм
+    try {
+      let queryTitle = item.title_en || item.title || "";
+      if (isNonAscii) {
+        try {
+          const tr = await translateWithMyMemory(queryTitle, 'en');
+          if (tr && tr.trim()) queryTitle = tr.trim();
+        } catch(e) {}
+      }
+
+      const r = await fetch(`https://moviepire.co/search?q=${encodeURIComponent(queryTitle)}`);
+      const json = await r.json();
+      const items = json.data || json.results || json || [];
+      if (Array.isArray(items) && items.length > 0) {
+        const tmdb = items[0];
+        const cleanPoster = tmdb.poster || tmdb.image || (tmdb.poster_path ? `https://image.tmdb.org/t/p/w500${tmdb.poster_path}` : '');
+        
+        needsSave = true;
+        return {
+          id: String(tmdb.id),
+          kp_id: item.kp_id || null,
+          title: tmdb.title || tmdb.name || queryTitle,
+          title_en: tmdb.title || tmdb.name || queryTitle,
+          poster: cleanPoster || item.poster || "https://images.unsplash.com/photo-1489599849927-2ee91cede3ba?w=400&q=80",
+          rating: tmdb.vote_average || tmdb.rating || item.rating || "8.0",
+          rating_tmdb: tmdb.vote_average || tmdb.rating || item.rating_tmdb || null,
+          rating_kp: item.rating_kp || null,
+          rating_imdb: item.rating_imdb || null,
+          year: tmdb.year || (tmdb.release_date ? tmdb.release_date.slice(0, 4) : item.year || "2026"),
+          type: tmdb.type || item.type || "movie",
+          provider: "both",
+          last_provider: item.last_provider || "vidsrc",
+          last_balancer_index: item.last_balancer_index || 0,
+          last_balancer_name: item.last_balancer_name || null
+        };
+      }
+    } catch(e) {}
+
+    // Якщо пошук не повернув TMDB, принаймні очищаємо московитські банери
+    if (isBadPoster) {
+      item.poster = "https://images.unsplash.com/photo-1489599849927-2ee91cede3ba?w=400&q=80";
+      needsSave = true;
+    }
+    return item;
+  }));
+
+  if (needsSave) {
+    const validItems = migratedItems.filter(Boolean);
+    const dedupMap = new Map();
+    validItems.forEach(it => {
+      const key = it.id ? `tmdb_${it.id}` : `${normalizeTitleKey(it.title)}_${it.year}`;
+      if (!dedupMap.has(key)) dedupMap.set(key, it);
+    });
+    const finalHistory = Array.from(dedupMap.values()).slice(0, 6);
+    localStorage.setItem("fastfilm_watch_history", JSON.stringify(finalHistory));
+    renderWatchHistory();
+  }
+}
+
 function handleRoute() {
   const hash = window.location.hash;
   if (hash.startsWith("#watch")) {
@@ -383,6 +465,7 @@ function navigateHome(updateHash = true) {
     window.location.hash = "";
   }
   renderWatchHistory();
+  sanitizeAndMigrateWatchHistory();
   if (!browseData) loadBrowseCatalog();
 }
 
