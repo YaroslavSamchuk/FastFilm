@@ -474,16 +474,47 @@ function handleRoute() {
     navigateHome(false);
   }
 }
+function handleSearchInput(val) {
+  const btnClear = document.getElementById("btnClearSearch");
+  if (btnClear) {
+    btnClear.style.display = val && val.trim().length > 0 ? "flex" : "none";
+  }
+}
 
 function navigateHome(updateHash = true) {
   document.title = "FastFilm";
+  
+  // 1. Очищуємо поле пошуку та ховаємо кнопку швидкого скидання [✕]
+  const searchInput = document.getElementById("searchInput");
+  if (searchInput) searchInput.value = "";
+  const btnClear = document.getElementById("btnClearSearch");
+  if (btnClear) btnClear.style.display = "none";
+  
+  // 2. Ховаємо результати пошуку та показуємо каталог, історію і банер
+  const searchSec = document.getElementById("searchResultsSection");
+  if (searchSec) searchSec.style.display = "none";
+  
+  const browseSec = document.getElementById("collectionsContainer");
+  if (browseSec) browseSec.style.display = "block";
+  
+  const historySec = document.getElementById("historySection");
+  if (historySec) historySec.style.display = "block";
+
+  const heroSec = document.getElementById("heroSection");
+  if (heroSec && heroSec.querySelector("img")?.src) {
+    heroSec.style.display = "flex";
+  }
+
   document.getElementById("homePageView").style.display = "block";
   document.getElementById("watchPageView").style.display = "none";
   document.getElementById("btnBackToHome").style.display = "none";
   document.getElementById("videoIframe").src = "";
-  if (updateHash && window.location.hash.startsWith("#watch")) {
+  
+  if (updateHash && window.location.hash) {
     window.location.hash = "";
   }
+  
+  window.scrollTo({ top: 0, behavior: 'smooth' });
   renderWatchHistory();
   sanitizeAndMigrateWatchHistory();
   if (!browseData) loadBrowseCatalog();
@@ -512,6 +543,11 @@ function changeLanguage(lang) {
   document.getElementById("searchInput").placeholder = dict.placeholder;
   document.getElementById("btnSearch").innerText = dict.execute;
   
+  const btnBackSearch = document.getElementById("btnBackFromSearch");
+  if (btnBackSearch) btnBackSearch.innerText = dict.back || "[ ← BACK TO CATALOG ]";
+  const btnBackHome = document.getElementById("btnBackToHome");
+  if (btnBackHome) btnBackHome.innerText = dict.back || "[ ← BACK TO CATALOG ]";
+
   const tabAll = document.getElementById("tabFilterAll");
   if (tabAll) tabAll.innerText = dict.tabFilterAll;
   const tabVidsrc = document.getElementById("tabFilterVidsrc");
@@ -711,6 +747,15 @@ async function fetchKinobox(type, params = {}) {
   return null;
 }
 
+function sanitizeForMoviePire(q) {
+  if (!q || typeof q !== 'string') return '';
+  return q
+    .replace(/&/g, ' and ')
+    .replace(/[^a-zA-Z0-9\s]/g, ' ')
+    .replace(/\s+/g, ' ')
+    .trim();
+}
+
 /* =========================================================================
    SEARCH FUNCTION (100% ASYNC TMDB RESOLVER + AUTO-CONVERSION)
    ========================================================================= */
@@ -734,6 +779,9 @@ async function triggerSearch() {
   if (historySec) historySec.style.display = "none";
   searchSec.style.display = "block";
 
+  const btnClear = document.getElementById("btnClearSearch");
+  if (btnClear) btnClear.style.display = "flex";
+
   const grid = document.getElementById("searchGrid");
   grid.innerHTML = '<div style="grid-column: 1/-1; padding: 40px 0; color: var(--text-muted); font-family: var(--font-mono);"><span class="spinner"></span> SEARCHING & RESOLVING TMDB METADATA...</div>';
 
@@ -744,37 +792,35 @@ async function triggerSearch() {
   // Перевірка на кирилицю / не-латинські символи
   const isNonAscii = /[^\x00-\x7F]/.test(cleanQ);
 
-  // 1. Асинхронний пошук напряму в TMDB за оригінальним текстом (тільки для ASCII/латиниці щоб уникнути 400 помилки)
-  if (!isNonAscii) {
+  // 1. Асинхронний пошук напряму в TMDB за оригінальним текстом (тільки для ASCII/латиниці)
+  const sanitizedAscii = sanitizeForMoviePire(cleanQ);
+  if (!isNonAscii && sanitizedAscii) {
     promises.push(
-      fetch(`https://moviepire.co/search?q=${encodeURIComponent(cleanQ)}`)
-        .then(r => {
-          if (!r.ok) return null;
-          return r.json();
-        })
+      fetch(`https://moviepire.co/search?q=${encodeURIComponent(sanitizedAscii)}`)
+        .then(r => r.ok ? r.json() : null)
         .then(json => {
           if (!json) return;
           const items = json.data || json.results || json || [];
-        if (Array.isArray(items)) {
-          items.forEach(it => {
-            const posterUrl = it.poster || it.image || (it.poster_path ? `https://image.tmdb.org/t/p/w500${it.poster_path}` : '');
-            if (posterUrl && (posterUrl.includes('yandex') || posterUrl.includes('kinopoisk'))) return;
-            rawList.push({
-              id: it.id,
-              kp_id: null,
-              title: it.title || it.name || 'Movie',
-              title_en: it.title || it.name || 'Movie',
-              poster: posterUrl,
-              rating: it.vote_average || it.rating,
-              rating_tmdb: it.vote_average || it.rating,
-              year: it.year || (it.release_date ? it.release_date.slice(0, 4) : ''),
-              type: it.type || 'movie',
-              provider: 'both'
+          if (Array.isArray(items)) {
+            items.forEach(it => {
+              const posterUrl = it.poster || it.image || (it.poster_path ? `https://image.tmdb.org/t/p/w500${it.poster_path}` : '');
+              if (posterUrl && (posterUrl.includes('yandex') || posterUrl.includes('kinopoisk'))) return;
+              rawList.push({
+                id: it.id,
+                kp_id: null,
+                title: it.title || it.name || 'Movie',
+                title_en: it.title || it.name || 'Movie',
+                poster: posterUrl,
+                rating: it.vote_average || it.rating,
+                rating_tmdb: it.vote_average || it.rating,
+                year: it.year || (it.release_date ? it.release_date.slice(0, 4) : ''),
+                type: it.type || 'movie',
+                provider: 'both'
+              });
             });
-          });
-        }
-      })
-      .catch(() => {})
+          }
+        })
+        .catch(() => {})
     );
   }
 
@@ -783,28 +829,32 @@ async function triggerSearch() {
     promises.push(
       translateWithMyMemory(cleanQ, 'en')
         .then(async trRes => {
-          if (trRes && trRes.trim() && trRes.toLowerCase() !== cleanQ.toLowerCase()) {
-            const trClean = trRes.trim();
-            const r = await fetch(`https://moviepire.co/search?q=${encodeURIComponent(trClean)}`);
-            const json = await r.json();
-            const items = json.data || json.results || json || [];
-            if (Array.isArray(items)) {
-              items.forEach(it => {
-                const posterUrl = it.poster || it.image || (it.poster_path ? `https://image.tmdb.org/t/p/w500${it.poster_path}` : '');
-                if (posterUrl && (posterUrl.includes('yandex') || posterUrl.includes('kinopoisk'))) return;
-                rawList.push({
-                  id: it.id,
-                  kp_id: null,
-                  title: it.title || it.name || 'Movie',
-                  title_en: it.title || it.name || 'Movie',
-                  poster: posterUrl,
-                  rating: it.vote_average || it.rating,
-                  rating_tmdb: it.vote_average || it.rating,
-                  year: it.year || (it.release_date ? it.release_date.slice(0, 4) : ''),
-                  type: it.type || 'movie',
-                  provider: 'both'
-                });
-              });
+          if (trRes && typeof trRes === 'string' && trRes.trim() && trRes.toLowerCase() !== cleanQ.toLowerCase()) {
+            const sanitizedTr = sanitizeForMoviePire(trRes);
+            if (sanitizedTr) {
+              const r = await fetch(`https://moviepire.co/search?q=${encodeURIComponent(sanitizedTr)}`);
+              if (r.ok) {
+                const json = await r.json();
+                const items = json.data || json.results || json || [];
+                if (Array.isArray(items)) {
+                  items.forEach(it => {
+                    const posterUrl = it.poster || it.image || (it.poster_path ? `https://image.tmdb.org/t/p/w500${it.poster_path}` : '');
+                    if (posterUrl && (posterUrl.includes('yandex') || posterUrl.includes('kinopoisk'))) return;
+                    rawList.push({
+                      id: it.id,
+                      kp_id: null,
+                      title: it.title || it.name || 'Movie',
+                      title_en: it.title || it.name || 'Movie',
+                      poster: posterUrl,
+                      rating: it.vote_average || it.rating,
+                      rating_tmdb: it.vote_average || it.rating,
+                      year: it.year || (it.release_date ? it.release_date.slice(0, 4) : ''),
+                      type: it.type || 'movie',
+                      provider: 'both'
+                    });
+                  });
+                }
+              }
             }
           }
         })
@@ -816,32 +866,40 @@ async function triggerSearch() {
   promises.push(
     fetchKinobox('search', { query: cleanQ })
       .then(async json => {
-        const items = json?.data?.items || json?.items || [];
+        const items = json?.data?.items || json?.items || json?.data || (Array.isArray(json) ? json : []);
         if (Array.isArray(items) && items.length > 0) {
-          // Беремо тільки оригінальну англійську назву або TMDB ID та конвертуємо в чистий TMDB фільм
           const tmdbPromises = items.slice(0, 5).map(async it => {
-            const targetTitle = it.title?.original || it.title || it.name;
-            if (!targetTitle) return;
+            let targetTitle = '';
+            if (typeof it.title === 'string') targetTitle = it.title;
+            else if (typeof it.title === 'object' && it.title) {
+              targetTitle = it.title.original || it.title.english || it.title.russian || it.title.name || '';
+            } else if (typeof it.name === 'string') {
+              targetTitle = it.name;
+            }
+            const sanitizedTarget = sanitizeForMoviePire(targetTitle);
+            if (!sanitizedTarget) return;
             try {
-              const r = await fetch(`https://moviepire.co/search?q=${encodeURIComponent(targetTitle)}`);
-              const resJson = await r.json();
-              const tmdbItems = resJson.data || resJson.results || resJson || [];
-              if (Array.isArray(tmdbItems) && tmdbItems.length > 0) {
-                const matched = tmdbItems[0];
-                const posterUrl = matched.poster || matched.image || (matched.poster_path ? `https://image.tmdb.org/t/p/w500${matched.poster_path}` : '');
-                if (posterUrl && (posterUrl.includes('yandex') || posterUrl.includes('kinopoisk'))) return;
-                rawList.push({
-                  id: matched.id,
-                  kp_id: it.id || null,
-                  title: matched.title || matched.name || targetTitle,
-                  title_en: matched.title || matched.name || targetTitle,
-                  poster: posterUrl,
-                  rating: matched.vote_average || matched.rating,
-                  rating_tmdb: matched.vote_average || matched.rating,
-                  year: matched.year || it.year || '',
-                  type: matched.type || (it.type === 'Series' ? 'series' : 'movie'),
-                  provider: 'both'
-                });
+              const r = await fetch(`https://moviepire.co/search?q=${encodeURIComponent(sanitizedTarget)}`);
+              if (r.ok) {
+                const resJson = await r.json();
+                const tmdbItems = resJson.data || resJson.results || resJson || [];
+                if (Array.isArray(tmdbItems) && tmdbItems.length > 0) {
+                  const matched = tmdbItems[0];
+                  const posterUrl = matched.poster || matched.image || (matched.poster_path ? `https://image.tmdb.org/t/p/w500${matched.poster_path}` : '');
+                  if (posterUrl && (posterUrl.includes('yandex') || posterUrl.includes('kinopoisk'))) return;
+                  rawList.push({
+                    id: matched.id,
+                    kp_id: it.id || it.kinopoisk_id || null,
+                    title: matched.title || matched.name || targetTitle,
+                    title_en: matched.title || matched.name || targetTitle,
+                    poster: posterUrl,
+                    rating: matched.vote_average || matched.rating,
+                    rating_tmdb: matched.vote_average || matched.rating,
+                    year: matched.year || it.year || '',
+                    type: matched.type || (it.type === 'Series' ? 'series' : 'movie'),
+                    provider: 'both'
+                  });
+                }
               }
             } catch(e) {}
           });
@@ -1300,14 +1358,18 @@ async function toggleSynopsisTranslation() {
 }
 
 async function translateWithMyMemory(text, targetLang = 'uk') {
+  if (!text || typeof text !== 'string') return null;
+  const clean = text.trim();
+  if (!clean) return null;
+
   try {
-    const words = text.split(' ');
+    const words = clean.split(' ');
     const chunks = [];
     let curr = [];
     let currLen = 0;
 
     for (const w of words) {
-      if (currLen + w.length + 1 > 380) {
+      if (currLen + w.length + 1 > 350) {
         chunks.push(curr.join(' '));
         curr = [w];
         currLen = w.length;
@@ -1320,24 +1382,29 @@ async function translateWithMyMemory(text, targetLang = 'uk') {
 
     const promises = chunks.map(async chunk => {
       try {
-        const url = `https://api.mymemory.translated.net/get?q=${encodeURIComponent(chunk)}&langpair=en|${targetLang}`;
+        const url = `https://api.mymemory.translated.net/get?q=${encodeURIComponent(chunk)}&langpair=autodetect|${targetLang}`;
         const res = await fetch(url);
+        if (!res.ok) return null;
         const data = await res.json();
-        let rawText = data?.responseData?.translatedText || chunk;
+        if (data?.responseStatus !== 200) return null;
+        let rawText = data?.responseData?.translatedText;
+        if (!rawText || typeof rawText !== 'string' || rawText.includes("MYMEMORY WARNING") || rawText.includes("USAGE LIMIT") || rawText.includes("USED ALL AVAILABLE")) {
+          return null;
+        }
         const txt = document.createElement("textarea");
         txt.innerHTML = rawText;
         return txt.value;
       } catch(e) {
-        return chunk;
+        return null;
       }
     });
 
     const results = await Promise.all(promises);
-    return results.join(' ');
-  } catch (err) {
-    console.error("MyMemory Translation Error:", err);
-    return null;
-  }
+    if (results.length > 0 && results.every(r => r !== null && r !== undefined)) {
+      return results.join(' ');
+    }
+  } catch (err) {}
+  return null;
 }
 
 function updateWatchSidebarTitles() {

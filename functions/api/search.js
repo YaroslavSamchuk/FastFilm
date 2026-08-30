@@ -11,19 +11,25 @@ export async function onRequest(context) {
         "Accept": "*/*"
       }
     });
-    const data = await res.text();
-    return new Response(data, {
-      status: res.status,
-      headers: {
-        "Content-Type": "application/json; charset=utf-8",
-        "Access-Control-Allow-Origin": "*",
-        "Access-Control-Allow-Methods": "GET, OPTIONS"
-      }
-    });
-  } catch (err) {
-    return new Response(JSON.stringify({ error: err.message }), {
-      status: 500,
-      headers: { "Content-Type": "application/json", "Access-Control-Allow-Origin": "*" }
-    });
-  }
+    if (res.ok) {
+      const data = await res.text();
+      return new Response(data, {
+        status: 200,
+        headers: {
+          "Content-Type": "application/json; charset=utf-8",
+          "Access-Control-Allow-Origin": "*",
+          "Access-Control-Allow-Methods": "GET, OPTIONS"
+        }
+      });
+    }
+  } catch (err) {}
+
+  return new Response(JSON.stringify({ data: { items: [] } }), {
+    status: 200,
+    headers: {
+      "Content-Type": "application/json; charset=utf-8",
+      "Access-Control-Allow-Origin": "*",
+      "Access-Control-Allow-Methods": "GET, OPTIONS"
+    }
+  });
 }

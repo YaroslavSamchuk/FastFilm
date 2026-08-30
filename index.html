@@ -23,7 +23,7 @@
       <div class="nav-left">
         <a href="#" class="logo" onclick="event.preventDefault(); navigateHome();">
           <span class="logo-box">FASTFILM</span>
-          <span>// 2.9.5</span>
+          <span>// 3.0</span>
         </a>
         <button id="btnBackToHome" class="btn-back" onclick="navigateHome()">[ ← BACK TO CATALOG ]</button>
       </div>
@@ -65,7 +65,9 @@
             class="search-input" 
             placeholder="Search movies, TV series, directors, anime..."
             autocomplete="off"
+            oninput="handleSearchInput(this.value)"
           />
+          <button id="btnClearSearch" class="btn-clear-input" onclick="navigateHome()" title="Clear Search" style="display: none;">✕</button>
           <button class="search-btn" id="btnSearch" onclick="triggerSearch()">EXECUTE</button>
         </div>
 
@@ -82,7 +84,10 @@
     <main class="container" style="padding-top: 24px; padding-bottom: 60px;">
       <div id="searchResultsSection" style="display: none;">
         <div class="collection-header">
-          <h2 class="collection-title" id="searchResultsTitle">[ SEARCH RESULTS ]</h2>
+          <div style="display: flex; align-items: center; gap: 12px; flex-wrap: wrap;">
+            <h2 class="collection-title" id="searchResultsTitle">[ SEARCH RESULTS ]</h2>
+            <button id="btnBackFromSearch" class="btn-back" style="display: inline-block;" onclick="navigateHome()">[ ← BACK TO CATALOG ]</button>
+          </div>
           <span id="searchStats" style="font-family: var(--font-mono); font-size: 11px; color: var(--text-muted);">0 ITEMS</span>
         </div>
         <div class="movies-grid" id="searchGrid"></div>
