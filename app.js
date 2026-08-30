@@ -530,22 +530,37 @@ function changeLanguage(lang) {
   const playBtn = document.getElementById("heroPlayBtn");
   if (playBtn) playBtn.innerText = dict.play;
 
-  // Автоматично повертаємо опис фільму до оригіналу та скидаємо кнопку при зміні мови
+  // Автоматично оновлюємо опис: якщо англійська — показуємо оригінал, якщо інша — автоматично перекладаємо
   const synopsisEl = document.getElementById("watchSynopsis");
-  if (currentOriginalSynopsis && synopsisEl && !currentOriginalSynopsis.includes("Loading")) {
-    synopsisEl.innerText = currentOriginalSynopsis;
-    isSynopsisTranslated = false;
-    currentTranslatedSynopsis = null;
-  }
-
   const btnTr = document.getElementById("btnTranslateSynopsis");
-  if (btnTr) {
-    btnTr.classList.remove("active");
+
+  if (currentOriginalSynopsis && synopsisEl && !currentOriginalSynopsis.includes("Loading")) {
     if (lang === 'en' || lang.startsWith('en')) {
-      btnTr.style.display = 'none';
+      synopsisEl.innerText = currentOriginalSynopsis;
+      isSynopsisTranslated = false;
+      currentTranslatedSynopsis = null;
+      if (btnTr) btnTr.style.display = 'none';
     } else {
-      btnTr.style.display = 'inline-block';
-      btnTr.innerText = dict.btnTranslate || '[ TRANSLATE ]';
+      if (btnTr) {
+        btnTr.style.display = 'inline-block';
+        btnTr.innerText = dict.btnTranslating || '[ TRANSLATING... ]';
+        btnTr.classList.remove("active");
+      }
+      translateWithMyMemory(currentOriginalSynopsis, lang).then(translated => {
+        if (translated) {
+          currentTranslatedSynopsis = translated;
+          isSynopsisTranslated = true;
+          synopsisEl.innerText = translated;
+          if (btnTr) {
+            btnTr.innerText = dict.btnOriginal || '[ ORIGINAL (EN) ]';
+            btnTr.classList.add("active");
+          }
+        } else if (btnTr) {
+          btnTr.innerText = dict.btnTranslate || '[ TRANSLATE ]';
+        }
+      }).catch(() => {
+        if (btnTr) btnTr.innerText = dict.btnTranslate || '[ TRANSLATE ]';
+      });
     }
   }
 
@@ -1062,9 +1077,28 @@ async function loadMovieDetails(id, type) {
             btn.style.display = 'none';
           } else {
             btn.style.display = 'inline-block';
-            btn.innerText = dict.btnTranslate;
+            btn.innerText = dict.btnTranslating || '[ TRANSLATING... ]';
             btn.classList.remove("active");
           }
+        }
+
+        // Автоматично перекладаємо на обрану мову
+        if (currentLang && !currentLang.startsWith('en')) {
+          translateWithMyMemory(desc, currentLang).then(translated => {
+            if (translated && currentOriginalSynopsis === desc) {
+              currentTranslatedSynopsis = translated;
+              isSynopsisTranslated = true;
+              document.getElementById("watchSynopsis").innerText = translated;
+              if (btn) {
+                btn.innerText = dict.btnOriginal || '[ ORIGINAL (EN) ]';
+                btn.classList.add("active");
+              }
+            } else if (btn) {
+              btn.innerText = dict.btnTranslate || '[ TRANSLATE ]';
+            }
+          }).catch(() => {
+            if (btn) btn.innerText = dict.btnTranslate || '[ TRANSLATE ]';
+          });
         }
       } else {
         currentOriginalSynopsis = "No extended synopsis available for this title.";
