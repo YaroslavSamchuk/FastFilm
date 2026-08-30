@@ -7,11 +7,11 @@ export async function onRequest(context) {
 
   const collapsUrl = kpId 
     ? `https://api.delivembed.cc/embed/kp/${kpId}` 
-    : `https://api.delivembed.cc/embed/kp/${tmdbId}`;
+    : (isTv ? `https://vidsrc.to/embed/tv/${tmdbId}/1/1` : `https://vidsrc.to/embed/movie/${tmdbId}`);
 
   const players = [
-    { type: "Collaps", iframeUrl: collapsUrl },
     { type: "Turbo", iframeUrl: isTv ? `https://player.videasy.net/tv/${tmdbId}/1/1` : `https://player.videasy.net/movie/${tmdbId}` },
+    { type: "Collaps", iframeUrl: collapsUrl },
     { type: "Veoveo", iframeUrl: isTv ? `https://vixsrc.to/tv/${tmdbId}/1/1` : `https://vixsrc.to/movie/${tmdbId}` },
     { type: "Gencit", iframeUrl: isTv ? `https://vidsrc.to/embed/tv/${tmdbId}/1/1` : `https://vidsrc.to/embed/movie/${tmdbId}` },
     { type: "Videoseed", iframeUrl: isTv ? `https://www.2embed.cc/embedtv/${tmdbId}&s=1&e=1` : `https://www.2embed.cc/embed/${tmdbId}` },

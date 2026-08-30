@@ -1098,77 +1098,109 @@ function renderWatchPage(item, updateHash = true) {
 async function loadMovieDetails(id, type) {
   if (!id) return;
   const dict = DICT[currentLang] || DICT.en;
-  const ep = (type === 'series' || type === 'tv') ? 'series' : 'movie';
+  let ep = (type === 'series' || type === 'tv') ? 'series' : 'movie';
+  let data = null;
+
   try {
     const res = await fetch(`https://moviepire.co/${ep}/${id}`);
-    const json = await res.json();
-    const data = json.data || json;
-    if (data) {
-      const desc = data.description || data.overview;
-      if (desc) {
-        currentOriginalSynopsis = desc;
-        currentTranslatedSynopsis = null;
-        isSynopsisTranslated = false;
-        document.getElementById("watchSynopsis").innerText = desc;
-        const btn = document.getElementById("btnTranslateSynopsis");
-        if (btn) {
-          if (currentLang === 'en' || currentLang.startsWith('en')) {
-            btn.style.display = 'none';
-          } else {
-            btn.style.display = 'inline-block';
-            btn.innerText = dict.btnTranslating || '[ TRANSLATING... ]';
-            btn.classList.remove("active");
+    if (res.ok) {
+      const json = await res.json();
+      data = json.data || json;
+    }
+  } catch (err) {}
+
+  // Якщо перший запит повернув помилку (наприклад 400 Bad Request для серіалу, який вважався фільмом) — пробуємо альтернативний ендпоінт
+  if (!data || data.error || !data.title) {
+    const altEp = (ep === 'movie') ? 'series' : 'movie';
+    try {
+      const altRes = await fetch(`https://moviepire.co/${altEp}/${id}`);
+      if (altRes.ok) {
+        const altJson = await altRes.json();
+        const altData = altJson?.data || altJson;
+        if (altData && altData.title) {
+          data = altData;
+          ep = altEp;
+          const detectedType = (ep === 'series') ? 'series' : 'movie';
+          if (currentItem) {
+            currentItem.type = detectedType;
+            const isTv = (detectedType === 'series');
+            document.getElementById("watchType").innerText = isTv ? dict.lblSeries : dict.lblMovie;
+            const queryParams = new URLSearchParams({ id: currentItem.id || '969681' });
+            if (isTv) queryParams.set("type", "series");
+            window.location.hash = `watch?${queryParams.toString()}`;
+            renderProviderControls(true);
           }
         }
+      }
+    } catch (altErr) {}
+  }
 
-        // Автоматично перекладаємо на обрану мову
-        if (currentLang && !currentLang.startsWith('en')) {
-          translateWithMyMemory(desc, currentLang).then(translated => {
-            if (translated && currentOriginalSynopsis === desc) {
-              currentTranslatedSynopsis = translated;
-              isSynopsisTranslated = true;
-              document.getElementById("watchSynopsis").innerText = translated;
-              if (btn) {
-                btn.innerText = dict.btnOriginal || '[ ORIGINAL (EN) ]';
-                btn.classList.add("active");
-              }
-            } else if (btn) {
-              btn.innerText = dict.btnTranslate || '[ TRANSLATE ]';
+  if (data && data.title) {
+    const desc = data.description || data.overview;
+    if (desc) {
+      currentOriginalSynopsis = desc;
+      currentTranslatedSynopsis = null;
+      isSynopsisTranslated = false;
+      document.getElementById("watchSynopsis").innerText = desc;
+      const btn = document.getElementById("btnTranslateSynopsis");
+      if (btn) {
+        if (currentLang === 'en' || currentLang.startsWith('en')) {
+          btn.style.display = 'none';
+        } else {
+          btn.style.display = 'inline-block';
+          btn.innerText = dict.btnTranslating || '[ TRANSLATING... ]';
+          btn.classList.remove("active");
+        }
+      }
+
+      // Автоматично перекладаємо на обрану мову
+      if (currentLang && !currentLang.startsWith('en')) {
+        translateWithMyMemory(desc, currentLang).then(translated => {
+          if (translated && currentOriginalSynopsis === desc) {
+            currentTranslatedSynopsis = translated;
+            isSynopsisTranslated = true;
+            document.getElementById("watchSynopsis").innerText = translated;
+            if (btn) {
+              btn.innerText = dict.btnOriginal || '[ ORIGINAL (EN) ]';
+              btn.classList.add("active");
             }
-          }).catch(() => {
-            if (btn) btn.innerText = dict.btnTranslate || '[ TRANSLATE ]';
-          });
-        }
-      } else {
-        currentOriginalSynopsis = "No extended synopsis available for this title.";
-        document.getElementById("watchSynopsis").innerText = currentOriginalSynopsis;
+          } else if (btn) {
+            btn.innerText = dict.btnTranslate || '[ TRANSLATE ]';
+          }
+        }).catch(() => {
+          if (btn) btn.innerText = dict.btnTranslate || '[ TRANSLATE ]';
+        });
       }
-      if (data.poster || data.poster_path || data.images?.poster || data.backdrop) {
-        const resolvedPoster = data.poster || data.images?.poster || (data.poster_path ? `https://image.tmdb.org/t/p/w500${data.poster_path}` : null) || data.backdrop;
-        if (resolvedPoster && (!currentItem.poster || currentItem.poster.includes('unsplash') || currentItem.poster.includes('yandex') || currentItem.poster.includes('kinopoisk'))) {
-          currentItem.poster = resolvedPoster;
-          const wPoster = document.getElementById("watchPoster");
-          if (wPoster) wPoster.src = resolvedPoster;
-          addToWatchHistory(currentItem);
-        }
-      }
-      if (data.year || data.release_date) {
-        currentItem.year = data.year || (data.release_date ? data.release_date.slice(0, 4) : currentItem.year);
-        document.getElementById("watchYear").innerText = currentItem.year;
-      }
-      if (data.rating || data.vote_average) {
-        currentItem.rating_imdb = data.vote_average || data.rating;
-        currentItem.rating_tmdb = data.vote_average || data.rating;
-        document.getElementById("watchRating").innerText = formatSidebarRating(currentItem);
-      }
-      if (data.title || data.name) {
-        currentItem.title = data.title || data.name;
-        currentItem.title_en = data.title || data.name;
-        updateWatchSidebarTitles();
+    } else {
+      currentOriginalSynopsis = "No extended synopsis available for this title.";
+      document.getElementById("watchSynopsis").innerText = currentOriginalSynopsis;
+    }
+    if (data.poster || data.poster_path || data.images?.poster || data.backdrop) {
+      const resolvedPoster = data.poster || data.images?.poster || (data.poster_path ? `https://image.tmdb.org/t/p/w500${data.poster_path}` : null) || data.backdrop;
+      if (resolvedPoster && (!currentItem.poster || currentItem.poster.includes('unsplash') || currentItem.poster.includes('yandex') || currentItem.poster.includes('kinopoisk'))) {
+        currentItem.poster = resolvedPoster;
+        const wPoster = document.getElementById("watchPoster");
+        if (wPoster) wPoster.src = resolvedPoster;
         addToWatchHistory(currentItem);
       }
     }
-  } catch (err) {
+    if (data.year || data.release_date || data.date) {
+      const relYear = data.year || (data.release_date ? data.release_date.slice(0, 4) : (data.date ? data.date.slice(0, 4) : currentItem.year));
+      currentItem.year = relYear;
+      document.getElementById("watchYear").innerText = currentItem.year;
+    }
+    if (data.rating || data.vote_average) {
+      currentItem.rating_imdb = data.vote_average || data.rating;
+      currentItem.rating_tmdb = data.vote_average || data.rating;
+      document.getElementById("watchRating").innerText = formatSidebarRating(currentItem);
+    }
+    if (data.title || data.name) {
+      currentItem.title = data.title || data.name;
+      currentItem.title_en = data.title || data.name;
+      updateWatchSidebarTitles();
+      addToWatchHistory(currentItem);
+    }
+  } else {
     const cur = document.getElementById("watchSynopsis").innerText;
     if (!cur || cur.includes("Loading")) {
       currentOriginalSynopsis = "Full movie synopsis available via streaming players.";
@@ -1347,11 +1379,11 @@ async function renderProviderControls(reloadIframe = true) {
     if (!players || players.length === 0) {
       const collapsUrl = kpId 
         ? `https://api.delivembed.cc/embed/kp/${kpId}` 
-        : `https://api.delivembed.cc/embed/kp/${tmdbId}`;
+        : (isTv ? `https://vidsrc.to/embed/tv/${tmdbId}/1/1` : `https://vidsrc.to/embed/movie/${tmdbId}`);
 
       players = [
-        { type: "Collaps", iframeUrl: collapsUrl },
         { type: "Turbo", iframeUrl: isTv ? `https://player.videasy.net/tv/${tmdbId}/1/1` : `https://player.videasy.net/movie/${tmdbId}` },
+        { type: "Collaps", iframeUrl: collapsUrl },
         { type: "Veoveo", iframeUrl: isTv ? `https://vixsrc.to/tv/${tmdbId}/1/1` : `https://vixsrc.to/movie/${tmdbId}` },
         { type: "Gencit", iframeUrl: isTv ? `https://vidsrc.to/embed/tv/${tmdbId}/1/1` : `https://vidsrc.to/embed/movie/${tmdbId}` },
         { type: "Videoseed", iframeUrl: isTv ? `https://www.2embed.cc/embedtv/${tmdbId}&s=1&e=1` : `https://www.2embed.cc/embed/${tmdbId}` },
