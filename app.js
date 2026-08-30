@@ -946,19 +946,30 @@ async function openWatchPage(item, updateHash = true) {
 }
 
 function openWatchPageFromParams(params) {
+  const id = params.get("id") || "969681";
+  const type = params.get("type") || "movie";
+
+  // Перевіряємо, чи є вже цей фільм в історії переглядів із завантаженими метаданими
+  const history = getWatchHistory();
+  const found = history.find(h => String(h.id) === String(id));
+
+  if (found) {
+    openWatchPage(found, false);
+    return;
+  }
+
   const item = {
-    id: params.get("id") || "969681",
-    kp_id: params.get("kp_id") || null,
-    title: params.get("title") || "Movie",
-    title_en: params.get("title") || "Movie",
-    year: params.get("year") || "2026",
-    rating: params.get("rating") || "8.0",
-    rating_tmdb: params.get("rating_tmdb") || null,
-    rating_kp: params.get("rating_kp") || null,
-    type: params.get("type") || "movie",
-    poster: params.get("poster") || "",
-    last_provider: params.get("provider") || params.get("last_provider") || null,
-    last_balancer_index: params.get("balancer") || params.get("last_balancer_index") || null
+    id: id,
+    kp_id: null,
+    title: "Movie",
+    title_en: "Movie",
+    year: "2026",
+    rating: "8.0",
+    rating_tmdb: null,
+    rating_kp: null,
+    type: type,
+    poster: "",
+    provider: "both"
   };
   openWatchPage(item, false);
 }
@@ -1009,16 +1020,12 @@ function renderWatchPage(item, updateHash = true) {
   item.last_provider = activeProvider;
   item.last_balancer_index = selectedBalancerIndex;
 
+  // Формуємо чисте та коротке посилання тільки з ID (та типом, якщо серіал)
   if (updateHash) {
     const queryParams = new URLSearchParams({
-      id: item.id || '',
-      kp_id: item.kp_id || '',
-      title: item.title || item.title_en || '',
-      type: item.type || 'movie',
-      poster: item.poster || '',
-      provider: activeProvider || 'vidsrc',
-      balancer: selectedBalancerIndex || 0
+      id: item.id || '969681'
     });
+    if (isTv) queryParams.set("type", "series");
     window.location.hash = `watch?${queryParams.toString()}`;
   }
 
@@ -1072,14 +1079,20 @@ async function loadMovieDetails(id, type) {
           addToWatchHistory(currentItem);
         }
       }
-      if (data.year) document.getElementById("watchYear").innerText = data.year;
+      if (data.year || data.release_date) {
+        currentItem.year = data.year || (data.release_date ? data.release_date.slice(0, 4) : currentItem.year);
+        document.getElementById("watchYear").innerText = currentItem.year;
+      }
       if (data.rating || data.vote_average) {
-        if (!currentItem.rating_imdb) currentItem.rating_imdb = data.vote_average || data.rating;
+        currentItem.rating_imdb = data.vote_average || data.rating;
+        currentItem.rating_tmdb = data.vote_average || data.rating;
         document.getElementById("watchRating").innerText = formatSidebarRating(currentItem);
       }
-      if (data.title && !currentItem.title) {
-        currentItem.title = data.title;
+      if (data.title || data.name) {
+        currentItem.title = data.title || data.name;
+        currentItem.title_en = data.title || data.name;
         updateWatchSidebarTitles();
+        addToWatchHistory(currentItem);
       }
     }
   } catch (err) {
