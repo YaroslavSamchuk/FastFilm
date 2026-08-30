@@ -1007,6 +1007,7 @@ async function openWatchPage(item, updateHash = true) {
 
 function openWatchPageFromParams(params) {
   const id = params.get("id") || "969681";
+  const kpId = params.get("kp") || null;
   const type = params.get("type") || "movie";
 
   // Перевіряємо, чи є вже цей фільм в історії переглядів із завантаженими метаданими
@@ -1014,13 +1015,14 @@ function openWatchPageFromParams(params) {
   const found = history.find(h => String(h.id) === String(id));
 
   if (found) {
+    if (kpId && !found.kp_id) found.kp_id = kpId;
     openWatchPage(found, false);
     return;
   }
 
   const item = {
     id: id,
-    kp_id: null,
+    kp_id: kpId,
     title: "Movie",
     title_en: "Movie",
     year: "2026",
@@ -1080,11 +1082,12 @@ function renderWatchPage(item, updateHash = true) {
   item.last_provider = activeProvider;
   item.last_balancer_index = selectedBalancerIndex;
 
-  // Формуємо чисте та коротке посилання тільки з ID (та типом, якщо серіал)
+  // Формуємо чисте посилання: основний TMDB ID (і kp, якщо є)
   if (updateHash) {
     const queryParams = new URLSearchParams({
       id: item.id || '969681'
     });
+    if (item.kp_id) queryParams.set("kp", item.kp_id);
     if (isTv) queryParams.set("type", "series");
     window.location.hash = `watch?${queryParams.toString()}`;
   }
@@ -1364,14 +1367,27 @@ async function renderProviderControls(reloadIframe = true) {
     primaryList.innerHTML = "";
 
     const tmdbId = currentItem.id || '969681';
-    const kpId = currentItem.kp_id || '';
+    let kpId = currentItem.kp_id || '';
     const isTv = (currentItem.type === 'tv' || currentItem.type === 'series');
+
+    // Автоматично шукаємо точний Kinopoisk ID, якщо його ще немає
+    if (!kpId && currentItem && (currentItem.title || currentItem.title_en)) {
+      fetchKinobox('search', { query: currentItem.title_en || currentItem.title })
+        .then(res => {
+          const items = res?.data?.items || res?.items || [];
+          if (items.length > 0 && items[0].id) {
+            currentItem.kp_id = items[0].id;
+            renderProviderControls(false);
+          }
+        })
+        .catch(() => {});
+    }
 
     let players = [];
 
     // 1. Спроба отримати динамічний список плеєрів через Edge Function
     try {
-      const q = new URLSearchParams({ kinopoisk: kpId, tmdb: tmdbId, type: currentItem.type || 'movie' }).toString();
+      const q = new URLSearchParams({ kinopoisk: kpId, tmdb: tmdbId, title: currentItem.title_en || currentItem.title || '', type: currentItem.type || 'movie' }).toString();
       const r = await fetch(`/api/players?${q}`);
       if (r.ok) {
         const json = await r.json();
@@ -1383,9 +1399,9 @@ async function renderProviderControls(reloadIframe = true) {
 
     // 2. Якщо динамічний список порожній — формуємо повний перелік плеєрів Kinobox
     if (!players || players.length === 0) {
-      const collapsUrl = isTv 
-        ? `https://api.ortified.ws/embed/kp/${kpId || tmdbId}` 
-        : `https://api.ortified.ws/embed/movie/${kpId || tmdbId}`;
+      const collapsUrl = kpId 
+        ? (isTv ? `https://api.ortified.ws/embed/kp/${kpId}` : `https://api.ortified.ws/embed/movie/${kpId}`)
+        : (isTv ? `https://vidsrc.to/embed/tv/${tmdbId}/1/1` : `https://vidsrc.to/embed/movie/${tmdbId}`);
 
       players = [
         { type: "Turbo", iframeUrl: isTv ? `https://player.videasy.net/tv/${tmdbId}/1/1` : `https://player.videasy.net/movie/${tmdbId}` },
