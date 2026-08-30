@@ -15,7 +15,7 @@ const VIDSRC_SERVERS = [
   { name: "Fade", url: "https://rivestream.org/embed" },
   { name: "Vidora", url: "https://anyembed.xyz/embed" },
   { name: "Nero", url: "https://vidfast.pro" },
-  { name: "Vidplay", url: "https://vidsrc.cc/v2/embed" },
+  { name: "Vidplay", url: "https://vidsrc.to/embed" },
   { name: "Flixify", url: "https://vidflix.club" },
   { name: "Yoru", url: "https://video.moviepire.co/embed" },
   { name: "4K", url: "https://player.videasy.net" },
@@ -27,7 +27,7 @@ const VIDSRC_SERVERS = [
   { name: "Asia", url: "https://nhdapi.com/embed" },
   { name: "Cine", url: "https://cinesrc.st/embed" },
   { name: "Vidmux", url: "https://vidlux.site/embed" },
-  { name: "Pablo", url: "https://vidsrc.cc/v3/embed" },
+  { name: "Pablo", url: "https://vidsrc.pm/embed" },
   { name: "Braflix", url: "https://api.cineby.homes/embed" },
   { name: "India", url: "https://vidup.to" },
   { name: "Diablo", url: "https://tanime.tv" },
@@ -37,13 +37,13 @@ const VIDSRC_SERVERS = [
   { name: "Prime", url: "https://player.vidrush.net/embed" },
   { name: "Hindi", url: "https://vidsrc.wtf/api/1" },
   { name: "Vidsrc", url: "https://vidsrc.me/embed" },
-  { name: "2embed", url: "https://www.2embed.stream/embed" },
+  { name: "2embed", url: "https://www.2embed.cc/embed" },
   { name: "PrimeWire", url: "https://primesrc.me/embed" },
   { name: "French", url: "https://frembed.asia/api" },
   { name: "Club", url: "https://moviesapi.to" },
   { name: "Sage", url: "https://111movies.com" },
   { name: "Spanish", url: "https://play.modocine.com/play.php/embed" },
-  { name: "Flix", url: "https://player.vidplus.to/embed" },
+  { name: "Flix", url: "https://multiembed.mov" },
   { name: "Portuguese", url: "https://superflixapi.buzz" }
 ];
 
@@ -1347,15 +1347,15 @@ async function renderProviderControls(reloadIframe = true) {
     if (!players || players.length === 0) {
       const collapsUrl = kpId 
         ? `https://api.delivembed.cc/embed/kp/${kpId}` 
-        : (isTv ? `https://vidsrc.cc/v2/embed/tv/${tmdbId}/1/1` : `https://vidsrc.cc/v2/embed/movie/${tmdbId}`);
+        : (isTv ? `https://player.videasy.net/tv/${tmdbId}/1/1` : `https://player.videasy.net/movie/${tmdbId}`);
 
       players = [
         { type: "Collaps", iframeUrl: collapsUrl },
         { type: "Turbo", iframeUrl: isTv ? `https://player.videasy.net/tv/${tmdbId}/1/1` : `https://player.videasy.net/movie/${tmdbId}` },
-        { type: "Gencit", iframeUrl: isTv ? `https://vidsrc.cc/v2/embed/tv/${tmdbId}/1/1` : `https://vidsrc.cc/v2/embed/movie/${tmdbId}` },
         { type: "Veoveo", iframeUrl: isTv ? `https://vixsrc.to/tv/${tmdbId}/1/1` : `https://vixsrc.to/movie/${tmdbId}` },
-        { type: "Videoseed", iframeUrl: isTv ? `https://player.vidplus.to/embed/tv/${tmdbId}/1/1` : `https://player.vidplus.to/embed/movie/${tmdbId}` },
-        { type: "Alloha", iframeUrl: `https://stream.voidboost.cc/embed/${kpId || tmdbId}` }
+        { type: "Gencit", iframeUrl: isTv ? `https://vidsrc.to/embed/tv/${tmdbId}/1/1` : `https://vidsrc.to/embed/movie/${tmdbId}` },
+        { type: "Videoseed", iframeUrl: isTv ? `https://www.2embed.cc/embedtv/${tmdbId}&s=1&e=1` : `https://www.2embed.cc/embed/${tmdbId}` },
+        { type: "Alloha", iframeUrl: isTv ? `https://multiembed.mov/?video_id=${tmdbId}&tmdb=1&s=1&e=1` : `https://multiembed.mov/?video_id=${tmdbId}&tmdb=1` }
       ];
     }
 
