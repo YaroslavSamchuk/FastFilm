@@ -1156,12 +1156,12 @@ async function renderProviderControls(reloadIframe = true) {
         : `https://api.delivembed.cc/embed/tmdb/${tmdbId}`;
 
       players = [
-        { type: "Alloha", iframeUrl: `https://player.alloha.tv/?token=guest&kp=${kpId}&tmdb=${tmdbId}` },
+        { type: "Collaps", iframeUrl: collapsUrl },
         { type: "Turbo", iframeUrl: isTv ? `https://player.videasy.net/tv/${tmdbId}/1/1` : `https://player.videasy.net/movie/${tmdbId}` },
         { type: "Gencit", iframeUrl: isTv ? `https://vidsrc.cc/v2/embed/tv/${tmdbId}/1/1` : `https://vidsrc.cc/v2/embed/movie/${tmdbId}` },
         { type: "Veoveo", iframeUrl: isTv ? `https://vixsrc.to/tv/${tmdbId}/1/1` : `https://vixsrc.to/movie/${tmdbId}` },
         { type: "Videoseed", iframeUrl: isTv ? `https://player.vidplus.to/embed/tv/${tmdbId}/1/1` : `https://player.vidplus.to/embed/movie/${tmdbId}` },
-        { type: "Collaps", iframeUrl: collapsUrl }
+        { type: "Alloha", iframeUrl: `https://stream.voidboost.cc/embed/${kpId || tmdbId}` }
       ];
     }
 
