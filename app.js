@@ -576,7 +576,7 @@ async function fetchKinobox(type, params = {}) {
 }
 
 /* =========================================================================
-   SEARCH FUNCTION (AUTO-TRANSLATE TO EN + CONCURRENT VIDSRC & KINOBOX)
+   SEARCH FUNCTION (100% ASYNC TMDB RESOLVER + AUTO-CONVERSION)
    ========================================================================= */
 async function triggerSearch() {
   const rawQ = document.getElementById("searchInput").value.trim();
@@ -599,110 +599,131 @@ async function triggerSearch() {
   searchSec.style.display = "block";
 
   const grid = document.getElementById("searchGrid");
-  grid.innerHTML = '<div style="grid-column: 1/-1; padding: 40px 0; color: var(--text-muted); font-family: var(--font-mono);"><span class="spinner"></span> SEARCHING & LINKING GLOBAL METADATA...</div>';
+  grid.innerHTML = '<div style="grid-column: 1/-1; padding: 40px 0; color: var(--text-muted); font-family: var(--font-mono);"><span class="spinner"></span> SEARCHING & RESOLVING TMDB METADATA...</div>';
 
   const cleanQ = rawQ.replace(/[\-_/\\:]+/g, " ").trim();
-  let rawList = [];
+  const rawList = [];
   const promises = [];
 
-  // Якщо пошуковий запит містить не-латинські символи, перекладаємо перед пошуком на англійську для TMDB
+  // Перевірка на кирилицю / не-латинські символи
   const isNonAscii = /[^\x00-\x7F]/.test(cleanQ);
-  let enQuery = cleanQ;
 
+  // 1. Асинхронний пошук напряму в TMDB за оригінальним текстом
+  promises.push(
+    fetch(`https://moviepire.co/search?q=${encodeURIComponent(cleanQ)}`)
+      .then(r => r.json())
+      .then(json => {
+        const items = json.data || json.results || json || [];
+        if (Array.isArray(items)) {
+          items.forEach(it => {
+            const posterUrl = it.poster || it.image || (it.poster_path ? `https://image.tmdb.org/t/p/w500${it.poster_path}` : '');
+            if (posterUrl && (posterUrl.includes('yandex') || posterUrl.includes('kinopoisk'))) return;
+            rawList.push({
+              id: it.id,
+              kp_id: null,
+              title: it.title || it.name || 'Movie',
+              title_en: it.title || it.name || 'Movie',
+              poster: posterUrl,
+              rating: it.vote_average || it.rating,
+              rating_tmdb: it.vote_average || it.rating,
+              year: it.year || (it.release_date ? it.release_date.slice(0, 4) : ''),
+              type: it.type || 'movie',
+              provider: 'both'
+            });
+          });
+        }
+      })
+      .catch(() => {})
+  );
+
+  // 2. Якщо введено не-латиницею — паралельно перекладаємо на англійську та шукаємо в TMDB
   if (isNonAscii) {
-    try {
-      const trRes = await translateWithMyMemory(cleanQ, 'en');
-      if (trRes && trRes.trim() && trRes.toLowerCase() !== cleanQ.toLowerCase()) {
-        enQuery = trRes.trim();
-      }
-    } catch(e) {}
-  }
-
-  // 1. Пошук MoviePire / TMDB / VidSrc (за оригінальним та перекладеним запитом)
-  if (currentProvider === 'all' || currentProvider === 'vidsrc') {
-    const queriesToTry = (enQuery !== cleanQ) ? [cleanQ, enQuery] : [cleanQ];
-    queriesToTry.forEach(qStr => {
-      promises.push(
-        fetch(`https://moviepire.co/search?q=${encodeURIComponent(qStr)}`)
-          .then(r => r.json())
-          .then(json => {
+    promises.push(
+      translateWithMyMemory(cleanQ, 'en')
+        .then(async trRes => {
+          if (trRes && trRes.trim() && trRes.toLowerCase() !== cleanQ.toLowerCase()) {
+            const trClean = trRes.trim();
+            const r = await fetch(`https://moviepire.co/search?q=${encodeURIComponent(trClean)}`);
+            const json = await r.json();
             const items = json.data || json.results || json || [];
             if (Array.isArray(items)) {
               items.forEach(it => {
+                const posterUrl = it.poster || it.image || (it.poster_path ? `https://image.tmdb.org/t/p/w500${it.poster_path}` : '');
+                if (posterUrl && (posterUrl.includes('yandex') || posterUrl.includes('kinopoisk'))) return;
                 rawList.push({
                   id: it.id,
                   kp_id: null,
                   title: it.title || it.name || 'Movie',
                   title_en: it.title || it.name || 'Movie',
-                  poster: it.poster || it.image,
-                  rating: it.rating,
+                  poster: posterUrl,
+                  rating: it.vote_average || it.rating,
                   rating_tmdb: it.vote_average || it.rating,
-                  rating_kp: null,
-                  year: it.year || '',
+                  year: it.year || (it.release_date ? it.release_date.slice(0, 4) : ''),
                   type: it.type || 'movie',
-                  provider: 'vidsrc'
+                  provider: 'both'
                 });
               });
             }
-          })
-          .catch(() => {})
-      );
-    });
-  }
-
-  // 2. Пошук Kinobox API (автоматично прив'язуємо до чистої англійської назви original)
-  if (currentProvider === 'all' || currentProvider === 'kinobox') {
-    promises.push(
-      fetchKinobox('search', { query: cleanQ })
-        .then(json => {
-          const items = json?.data?.items || json?.items || [];
-          if (Array.isArray(items)) {
-            items.forEach(it => {
-              const enTitle = it.title?.original || it.title || it.name || 'Film';
-              rawList.push({
-                id: null,
-                kp_id: it.id,
-                title: enTitle,
-                title_en: enTitle,
-                poster: it.gallery?.posterUrl,
-                rating: it.rating?.kinopoisk?.value || it.rating?.tmdb?.value || '8.0',
-                rating_kp: it.rating?.kinopoisk?.value || null,
-                rating_imdb: it.rating?.imdb?.value || null,
-                rating_tmdb: it.rating?.tmdb?.value || null,
-                year: it.year || '',
-                type: it.type === 'Series' ? 'series' : 'movie',
-                provider: 'kinobox'
-              });
-            });
           }
         })
         .catch(() => {})
-      );
+    );
   }
 
-  await Promise.all(promises);
+  // 3. Паралельний пошук локалізованих назв із авто-конвертацією в чистий TMDB
+  promises.push(
+    fetchKinobox('search', { query: cleanQ })
+      .then(async json => {
+        const items = json?.data?.items || json?.items || [];
+        if (Array.isArray(items) && items.length > 0) {
+          // Беремо тільки оригінальну англійську назву або TMDB ID та конвертуємо в чистий TMDB фільм
+          const tmdbPromises = items.slice(0, 5).map(async it => {
+            const targetTitle = it.title?.original || it.title || it.name;
+            if (!targetTitle) return;
+            try {
+              const r = await fetch(`https://moviepire.co/search?q=${encodeURIComponent(targetTitle)}`);
+              const resJson = await r.json();
+              const tmdbItems = resJson.data || resJson.results || resJson || [];
+              if (Array.isArray(tmdbItems) && tmdbItems.length > 0) {
+                const matched = tmdbItems[0];
+                const posterUrl = matched.poster || matched.image || (matched.poster_path ? `https://image.tmdb.org/t/p/w500${matched.poster_path}` : '');
+                if (posterUrl && (posterUrl.includes('yandex') || posterUrl.includes('kinopoisk'))) return;
+                rawList.push({
+                  id: matched.id,
+                  kp_id: it.id || null,
+                  title: matched.title || matched.name || targetTitle,
+                  title_en: matched.title || matched.name || targetTitle,
+                  poster: posterUrl,
+                  rating: matched.vote_average || matched.rating,
+                  rating_tmdb: matched.vote_average || matched.rating,
+                  year: matched.year || it.year || '',
+                  type: matched.type || (it.type === 'Series' ? 'series' : 'movie'),
+                  provider: 'both'
+                });
+              }
+            } catch(e) {}
+          });
+          await Promise.allSettled(tmdbPromises);
+        }
+      })
+      .catch(() => {})
+  );
 
-  // 3. Розумне об'єднання та дедуплікація за англійською назвою та роком
+  // Чекаємо завершення всіх асинхронних потоків (швидко і без затримок)
+  await Promise.allSettled(promises);
+
+  // 4. Повна дедуплікація виключно за унікальним TMDB ID
   const mergedMap = new Map();
 
   rawList.forEach(it => {
-    const titleKey = (it.title_en || it.title || '').toLowerCase().replace(/[^a-z0-9]/g, '');
-    const yearKey = (it.year ? String(it.year).slice(0, 4) : '');
-    const key = `${titleKey}_${yearKey}_${it.type}`;
-
+    if (!it.id) return;
+    const key = `tmdb_${it.id}`;
     if (!mergedMap.has(key)) {
-      mergedMap.set(key, { ...it });
+      mergedMap.set(key, it);
     } else {
       const existing = mergedMap.get(key);
-      if (it.id && !existing.id) existing.id = it.id;
       if (it.kp_id && !existing.kp_id) existing.kp_id = it.kp_id;
-      if (it.poster && (!existing.poster || existing.poster.includes('unsplash'))) existing.poster = it.poster;
-      if (it.rating && !existing.rating) existing.rating = it.rating;
-      if (it.rating_tmdb && !existing.rating_tmdb) existing.rating_tmdb = it.rating_tmdb;
-      if (it.rating_kp && !existing.rating_kp) existing.rating_kp = it.rating_kp;
-      if (it.rating_imdb && !existing.rating_imdb) existing.rating_imdb = it.rating_imdb;
-      if (it.year && !existing.year) existing.year = it.year;
-      existing.provider = 'both';
+      if (!existing.poster || existing.poster.includes('unsplash')) existing.poster = it.poster;
     }
   });
 
@@ -712,7 +733,7 @@ async function triggerSearch() {
   document.getElementById("searchStats").innerText = `${combined.length} ITEMS FOUND`;
 
   if (combined.length === 0) {
-    grid.innerHTML = '<div style="grid-column: 1/-1; padding: 40px 0; color: var(--text-muted); font-family: var(--font-mono);">[ NO ITEMS FOUND ]</div>';
+    grid.innerHTML = '<div style="grid-column: 1/-1; padding: 40px 0; color: var(--text-muted); font-family: var(--font-mono);">[ NO ITEMS FOUND IN TMDB ]</div>';
     return;
   }
 
@@ -722,38 +743,15 @@ async function triggerSearch() {
 }
 
 function formatRatingBadge(item) {
-  const parts = [];
-
-  const rKp = item.rating_kp || (item.provider === 'kinobox' ? item.rating : null);
-  if (rKp !== undefined && rKp !== null && rKp !== "") {
-    const num = parseFloat(rKp);
+  const r = item.rating_tmdb || item.rating;
+  if (r !== undefined && r !== null && r !== "") {
+    const num = parseFloat(r);
     if (!isNaN(num) && num > 0) {
       const val = (num > 10) ? (num / 10).toFixed(1) : num.toFixed(1);
-      parts.push(`KP ${val}`);
+      return `★ ${val}`;
     }
   }
-
-  const rImdb = item.rating_imdb || (item.provider !== 'kinobox' && item.rating && !item.rating_kp ? item.rating : null);
-  if (rImdb !== undefined && rImdb !== null && rImdb !== "") {
-    const num = parseFloat(rImdb);
-    if (!isNaN(num) && num > 0) {
-      const val = (num > 10) ? (num / 10).toFixed(1) : num.toFixed(1);
-      parts.push(`${val}`);
-    }
-  }
-
-  if (parts.length === 0) {
-    if (item.rating) {
-      const num = parseFloat(item.rating);
-      if (!isNaN(num) && num > 0) {
-        const val = (num > 10) ? (num / 10).toFixed(1) : num.toFixed(1);
-        return `★ ${val}`;
-      }
-    }
-    return `★ 8.0`;
-  }
-
-  return `★ ${parts.join(' • ')}`;
+  return "★ 8.0";
 }
 
 function formatSidebarRating(item) {
@@ -808,7 +806,10 @@ function createCard(item) {
   const isTv = (item.type === 'tv' || item.type === 'series');
   const typeLabel = isTv ? dict.lblSeries : dict.lblMovie;
 
-  const posterSrc = item.poster || "https://images.unsplash.com/photo-1489599849927-2ee91cede3ba?w=400&q=80";
+  let posterSrc = item.poster;
+  if (!posterSrc || posterSrc.includes('unsplash') || posterSrc.includes('yandex') || posterSrc.includes('kinopoisk')) {
+    posterSrc = "https://images.unsplash.com/photo-1489599849927-2ee91cede3ba?w=400&q=80";
+  }
   const ratingBadge = formatRatingBadge(item);
   const displayTitle = item.title_en || item.title || item.name || "Movie";
 
@@ -847,7 +848,7 @@ async function openWatchPage(item, updateHash = true) {
       const tmdbItems = tmdbJson.data || tmdbJson.results || tmdbJson || [];
       if (tmdbItems.length > 0) {
         item.id = tmdbItems[0].id;
-        if (!item.poster || item.poster.includes('unsplash')) {
+        if (!item.poster || item.poster.includes('unsplash') || item.poster.includes('yandex') || item.poster.includes('kinopoisk')) {
           item.poster = tmdbItems[0].poster || tmdbItems[0].image;
         }
         if (tmdbItems[0].vote_average || tmdbItems[0].rating) {
@@ -981,7 +982,7 @@ async function loadMovieDetails(id, type) {
       }
       if (data.poster || data.poster_path || data.images?.poster || data.backdrop) {
         const resolvedPoster = data.poster || data.images?.poster || (data.poster_path ? `https://image.tmdb.org/t/p/w500${data.poster_path}` : null) || data.backdrop;
-        if (resolvedPoster && (!currentItem.poster || currentItem.poster.includes('unsplash'))) {
+        if (resolvedPoster && (!currentItem.poster || currentItem.poster.includes('unsplash') || currentItem.poster.includes('yandex') || currentItem.poster.includes('kinopoisk'))) {
           currentItem.poster = resolvedPoster;
           const wPoster = document.getElementById("watchPoster");
           if (wPoster) wPoster.src = resolvedPoster;
