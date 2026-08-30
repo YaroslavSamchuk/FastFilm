@@ -980,6 +980,35 @@ function createCard(item) {
   return card;
 }
 
+async function resolveKinopoiskId(title, year = null) {
+  if (!title || title === "Movie" || !currentItem) return null;
+  if (currentItem.kp_id) return currentItem.kp_id;
+
+  try {
+    const res = await fetchKinobox('search', { query: title });
+    const items = res?.data?.items || res?.items || res?.data || (Array.isArray(res) ? res : []);
+    if (Array.isArray(items) && items.length > 0) {
+      let matched = items[0];
+      if (year) {
+        const exactYear = items.find(it => String(it.year) === String(year));
+        if (exactYear) matched = exactYear;
+      }
+      const kpId = matched.id || matched.kinopoisk_id || matched.kinopoiskId;
+      if (kpId && currentItem) {
+        currentItem.kp_id = String(kpId);
+        addToWatchHistory(currentItem);
+        const isTv = (currentItem.type === 'tv' || currentItem.type === 'series');
+        const queryParams = new URLSearchParams({ id: currentItem.id || '969681', kp: currentItem.kp_id });
+        if (isTv) queryParams.set("type", "series");
+        window.location.hash = `watch?${queryParams.toString()}`;
+        renderProviderControls(false);
+        return currentItem.kp_id;
+      }
+    }
+  } catch (e) {}
+  return null;
+}
+
 /* =========================================================================
    DEDICATED WATCH PAGE FUNCTIONS (PURE CLIENT-SIDE)
    ========================================================================= */
@@ -1003,6 +1032,11 @@ async function openWatchPage(item, updateHash = true) {
 
   currentItem = item;
   renderWatchPage(item, updateHash);
+
+  // Одразу запускаємо фоновий пошук Kinopoisk ID для трендових та інших тайтлів
+  if (!currentItem.kp_id && (currentItem.title || currentItem.title_en)) {
+    resolveKinopoiskId(currentItem.title_en || currentItem.title, currentItem.year);
+  }
 }
 
 function openWatchPageFromParams(params) {
@@ -1208,6 +1242,9 @@ async function loadMovieDetails(id, type) {
       currentItem.title_en = data.title || data.name;
       updateWatchSidebarTitles();
       addToWatchHistory(currentItem);
+      if (!currentItem.kp_id) {
+        resolveKinopoiskId(currentItem.title_en || currentItem.title, currentItem.year);
+      }
     }
   } else {
     const cur = document.getElementById("watchSynopsis").innerText;
