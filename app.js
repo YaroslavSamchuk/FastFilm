@@ -1001,7 +1001,7 @@ async function resolveKinopoiskId(title, year = null) {
         const queryParams = new URLSearchParams({ id: currentItem.id || '969681', kp: currentItem.kp_id });
         if (isTv) queryParams.set("type", "series");
         window.location.hash = `watch?${queryParams.toString()}`;
-        renderProviderControls(false);
+        renderProviderControls(true);
         return currentItem.kp_id;
       }
     }
@@ -1413,8 +1413,9 @@ async function renderProviderControls(reloadIframe = true) {
         .then(res => {
           const items = res?.data?.items || res?.items || [];
           if (items.length > 0 && items[0].id) {
-            currentItem.kp_id = items[0].id;
-            renderProviderControls(false);
+            currentItem.kp_id = String(items[0].id);
+            addToWatchHistory(currentItem);
+            renderProviderControls(true);
           }
         })
         .catch(() => {});
@@ -1437,7 +1438,7 @@ async function renderProviderControls(reloadIframe = true) {
     // 2. Якщо динамічний список порожній — формуємо повний перелік плеєрів Kinobox
     if (!players || players.length === 0) {
       const collapsUrl = kpId 
-        ? (isTv ? `https://api.ortified.ws/embed/kp/${kpId}` : `https://api.ortified.ws/embed/movie/${kpId}`)
+        ? `https://api.ortified.ws/embed/kp/${kpId}` 
         : (isTv ? `https://vidsrc.to/embed/tv/${tmdbId}/1/1` : `https://vidsrc.to/embed/movie/${tmdbId}`);
 
       players = [
@@ -1446,7 +1447,7 @@ async function renderProviderControls(reloadIframe = true) {
         { type: "Veoveo", iframeUrl: isTv ? `https://vixsrc.to/tv/${tmdbId}/1/1` : `https://vixsrc.to/movie/${tmdbId}` },
         { type: "Gencit", iframeUrl: isTv ? `https://vidsrc.to/embed/tv/${tmdbId}/1/1` : `https://vidsrc.to/embed/movie/${tmdbId}` },
         { type: "Videoseed", iframeUrl: isTv ? `https://www.2embed.cc/embedtv/${tmdbId}&s=1&e=1` : `https://www.2embed.cc/embed/${tmdbId}` },
-        { type: "Alloha", iframeUrl: `https://sansa.stravers.live/?token_movie=${encodeURIComponent(kpId || tmdbId)}&token=48ac5259825fb8f20103dac69a9029` }
+        { type: "Alloha", iframeUrl: isTv ? `https://multiembed.mov/?video_id=${tmdbId}&tmdb=1&s=1&e=1` : `https://multiembed.mov/?video_id=${tmdbId}&tmdb=1` }
       ];
     }
 
