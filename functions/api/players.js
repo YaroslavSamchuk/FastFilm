@@ -5,9 +5,9 @@ export async function onRequest(context) {
   const type = url.searchParams.get("type") || "movie";
   const isTv = (type === "series" || type === "tv");
 
-  const collapsUrl = kpId 
-    ? `https://api.delivembed.cc/embed/kp/${kpId}` 
-    : (isTv ? `https://vidsrc.to/embed/tv/${tmdbId}/1/1` : `https://vidsrc.to/embed/movie/${tmdbId}`);
+  const collapsUrl = isTv 
+    ? `https://api.ortified.ws/embed/kp/${kpId || tmdbId}` 
+    : `https://api.ortified.ws/embed/movie/${kpId || tmdbId}`;
 
   const players = [
     { type: "Turbo", iframeUrl: isTv ? `https://player.videasy.net/tv/${tmdbId}/1/1` : `https://player.videasy.net/movie/${tmdbId}` },
