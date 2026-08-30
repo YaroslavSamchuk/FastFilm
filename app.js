@@ -699,8 +699,8 @@ async function fetchKinobox(type, params = {}) {
   // 2. Прямий виклик Kinobox API
   try {
     const directEndpoint = (type === 'search') 
-      ? `https://kinobox.tv/api/movies/search/?${q}`
-      : `https://kinobox.tv/api/players?${q}`;
+      ? `https://api.kinobox.tv/api/movies/search/?${q}`
+      : `https://api.kinobox.tv/api/players?${q}`;
       
     const rDirect = await fetch(directEndpoint);
     if (rDirect.ok) {
@@ -744,12 +744,17 @@ async function triggerSearch() {
   // Перевірка на кирилицю / не-латинські символи
   const isNonAscii = /[^\x00-\x7F]/.test(cleanQ);
 
-  // 1. Асинхронний пошук напряму в TMDB за оригінальним текстом
-  promises.push(
-    fetch(`https://moviepire.co/search?q=${encodeURIComponent(cleanQ)}`)
-      .then(r => r.json())
-      .then(json => {
-        const items = json.data || json.results || json || [];
+  // 1. Асинхронний пошук напряму в TMDB за оригінальним текстом (тільки для ASCII/латиниці щоб уникнути 400 помилки)
+  if (!isNonAscii) {
+    promises.push(
+      fetch(`https://moviepire.co/search?q=${encodeURIComponent(cleanQ)}`)
+        .then(r => {
+          if (!r.ok) return null;
+          return r.json();
+        })
+        .then(json => {
+          if (!json) return;
+          const items = json.data || json.results || json || [];
         if (Array.isArray(items)) {
           items.forEach(it => {
             const posterUrl = it.poster || it.image || (it.poster_path ? `https://image.tmdb.org/t/p/w500${it.poster_path}` : '');
@@ -770,7 +775,8 @@ async function triggerSearch() {
         }
       })
       .catch(() => {})
-  );
+    );
+  }
 
   // 2. Якщо введено не-латиницею — паралельно перекладаємо на англійську та шукаємо в TMDB
   if (isNonAscii) {

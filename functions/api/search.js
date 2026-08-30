@@ -1,6 +1,6 @@
 export async function onRequest(context) {
   const url = new URL(context.request.url);
-  const target = `https://kinobox.tv/api/movies/search/${url.search}`;
+  const target = `https://api.kinobox.tv/api/movies/search/${url.search}`;
   
   try {
     const res = await fetch(target, {
