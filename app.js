@@ -1347,7 +1347,7 @@ async function renderProviderControls(reloadIframe = true) {
     if (!players || players.length === 0) {
       const collapsUrl = kpId 
         ? `https://api.delivembed.cc/embed/kp/${kpId}` 
-        : (isTv ? `https://player.videasy.net/tv/${tmdbId}/1/1` : `https://player.videasy.net/movie/${tmdbId}`);
+        : `https://api.delivembed.cc/embed/kp/${tmdbId}`;
 
       players = [
         { type: "Collaps", iframeUrl: collapsUrl },
@@ -1486,8 +1486,7 @@ async function loadSubtitles(id, type) {
 
 function setIframe(url) {
   const iframe = document.getElementById("videoIframe");
-  if (!iframe) return;
-  if (iframe.src === url) return; // Ніколи не перезавантажувати плеєр, якщо це те саме посилання
+  if (!iframe || !url) return;
   iframe.removeAttribute("sandbox");
   iframe.src = url;
 }
