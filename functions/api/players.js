@@ -7,7 +7,7 @@ export async function onRequest(context) {
 
   const collapsUrl = kpId 
     ? `https://api.delivembed.cc/embed/kp/${kpId}` 
-    : `https://api.delivembed.cc/embed/tmdb/${tmdbId}`;
+    : (isTv ? `https://vidsrc.cc/v2/embed/tv/${tmdbId}/1/1` : `https://vidsrc.cc/v2/embed/movie/${tmdbId}`);
 
   const players = [
     { type: "Collaps", iframeUrl: collapsUrl },

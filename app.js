@@ -111,7 +111,7 @@ let DICT = {
     primaryVidsrc: "SELECT VIDSRC SERVER:",
     subs: "AVAILABLE SUBTITLES:",
     back: "[ ← BACK TO CATALOG ]",
-    play: "[ ▶ PLAY NOW ]",
+    play: "[ PLAY NOW ]",
     tabFilterAll: "[ 01. ALL ]",
     tabFilterVidsrc: "[ 02. VIDSRC ]",
     tabFilterKinobox: "[ 03. KINOBOX ]",
@@ -133,14 +133,24 @@ let DICT = {
     trendingSeries: "TRENDING SERIES THIS WEEK",
     popularMovies: "POPULAR MOVIES",
     popularSeries: "POPULAR SERIES",
+    topRatedMovies: "TOP RATED MOVIES",
+    topRatedSeries: "TOP RATED SERIES",
+    upcomingReleases: "UPCOMING RELEASES",
+    nowPlaying: "NOW PLAYING IN CINEMAS",
+    recentlyWatched: "RECENTLY WATCHED",
+    clearHistory: "[ CLEAR HISTORY ]",
     releases: "RELEASES",
+    itemsFound: "ITEMS FOUND",
+    noItemsFound: "[ NO ITEMS FOUND IN TMDB ]",
     adblockTag: "[ RECOMMENDATION // AD-BLOCKER ]",
     adblockTitle: "Enable an AdBlocker for a Clean Experience",
     adblockDesc: "Third-party video streaming servers may display intrusive popups and casino redirects. We strongly recommend installing AdBlock or using Brave Browser for uninterrupted, ad-free playback.",
     adblockInstall: "[ GET ADBLOCK ]",
     adblockBtnHeader: "[ ADBLOCK ]",
     adblockClose: "[ CONTINUE ]",
-    adblockDontShow: "[ DON'T REMIND AGAIN ]"
+    adblockDontShow: "[ DON'T REMIND AGAIN ]",
+    reloadServices: "[ RELOAD SERVICES ]",
+    reloading: "[ RELOADING... ]"
   },
   uk: {
     name: "УКРАЇНСЬКА",
@@ -152,7 +162,7 @@ let DICT = {
     primaryVidsrc: "ВИБЕРІТЬ СЕРВЕР VIDSRC:",
     subs: "ДОСТУПНІ СУБТИТРИ:",
     back: "[ ← НАЗАД ДО КАТАЛОГУ ]",
-    play: "[ ▶ ДИВИТИСЯ ЗАРАЗ ]",
+    play: "[ ДИВИТИСЯ ЗАРАЗ ]",
     tabFilterAll: "[ 01. ВСІ ]",
     tabFilterVidsrc: "[ 02. VIDSRC ]",
     tabFilterKinobox: "[ 03. KINOBOX ]",
@@ -174,14 +184,24 @@ let DICT = {
     trendingSeries: "ТРЕНДОВІ СЕРІАЛИ ТИЖНЯ",
     popularMovies: "ПОПУЛЯРНІ ФІЛЬМИ",
     popularSeries: "ПОПУЛЯРНІ СЕРІАЛИ",
+    topRatedMovies: "ТОПОВІ ФІЛЬМИ",
+    topRatedSeries: "ТОПОВІ СЕРІАЛИ",
+    upcomingReleases: "МАЙБУТНІ РЕЛІЗИ",
+    nowPlaying: "ЗАРАЗ У КІНОТЕАТРАХ",
+    recentlyWatched: "НЕЩОДАВНО ПЕРЕГЛЯНУТІ",
+    clearHistory: "[ ОЧИСТИТИ ІСТОРІЮ ]",
     releases: "РЕЛІЗІВ",
+    itemsFound: "ЗНАЙДЕНО ТАЙТЛІВ",
+    noItemsFound: "[ НІЧОГО НЕ ЗНАЙДЕНО В TMDB ]",
     adblockTag: "[ РЕКОМЕНДАЦІЯ // АНТИРЕКЛАМА ]",
     adblockTitle: "Увімкніть AdBlocker для чистого перегляду без реклами",
     adblockDesc: "Сторонні стрімінг-сервери можуть показувати нав'язливу спливаючу рекламу та казино-редиректи при кліку на Play. Рекомендуємо встановити розширення AdBlock або використовувати браузер Brave для максимального захисту.",
     adblockInstall: "[ ВСТАНОВИТИ ADBLOCK ]",
     adblockBtnHeader: "[ ADBLOCK ]",
     adblockClose: "[ ПРОДОВЖИТИ ]",
-    adblockDontShow: "[ БІЛЬШЕ НЕ НАГАДУВАТИ ]"
+    adblockDontShow: "[ БІЛЬШЕ НЕ НАГАДУВАТИ ]",
+    reloadServices: "[ ОНОВИТИ СЕРВІСИ ]",
+    reloading: "[ ОНОВЛЕННЯ... ]"
   }
 };
 
@@ -564,6 +584,17 @@ function changeLanguage(lang) {
     }
   }
 
+  const lblSearchResults = document.getElementById("searchResultsTitle");
+  if (lblSearchResults) lblSearchResults.innerText = dict.results || "[ SEARCH RESULTS ]";
+
+  const historyTitle = document.getElementById("historyTitle");
+  if (historyTitle) historyTitle.innerText = `[ ${dict.recentlyWatched || 'RECENTLY WATCHED'} ]`;
+  const btnClearHist = document.getElementById("btnClearHistory");
+  if (btnClearHist) btnClearHist.innerText = dict.clearHistory || '[ CLEAR HISTORY ]';
+
+  const lblReload = document.getElementById("lblReloadServers");
+  if (lblReload) lblReload.innerText = dict.reloadServices || "[ RELOAD SERVICES ]";
+
   renderWatchHistory();
   if (browseData) renderCollections(browseData);
   if (currentItem) {
@@ -583,10 +614,13 @@ async function loadBrowseCatalog() {
 
     if (browseData.hero) {
       const hero = browseData.hero;
+      const dict = DICT[currentLang] || DICT.en;
       document.getElementById("heroSection").style.display = "flex";
       document.getElementById("heroBg").src = hero.images?.backdrop || "";
       document.getElementById("heroTitle").innerText = hero.title || "Featured";
       document.getElementById("heroDesc").innerText = hero.description || "";
+      const hBtn = document.getElementById("heroPlayBtn");
+      if (hBtn) hBtn.innerText = dict.play || "[ PLAY NOW ]";
       document.getElementById("heroPlayBtn").onclick = () => openWatchPage({
         id: hero.id,
         title: hero.title,
@@ -617,9 +651,13 @@ function renderCollections(data) {
 
     if (currentLang !== 'en') {
       if (/trending movies/i.test(rawTitle)) displayTitle = dict.trendingMovies || rawTitle;
-      else if (/trending series/i.test(rawTitle)) displayTitle = dict.trendingSeries || rawTitle;
+      else if (/trending series|trending tv/i.test(rawTitle)) displayTitle = dict.trendingSeries || rawTitle;
       else if (/popular movies/i.test(rawTitle)) displayTitle = dict.popularMovies || rawTitle;
-      else if (/popular series/i.test(rawTitle)) displayTitle = dict.popularSeries || rawTitle;
+      else if (/popular series|popular tv/i.test(rawTitle)) displayTitle = dict.popularSeries || rawTitle;
+      else if (/top rated movies/i.test(rawTitle)) displayTitle = dict.topRatedMovies || rawTitle;
+      else if (/top rated series|top rated tv/i.test(rawTitle)) displayTitle = dict.topRatedSeries || rawTitle;
+      else if (/upcoming/i.test(rawTitle)) displayTitle = dict.upcomingReleases || rawTitle;
+      else if (/now playing/i.test(rawTitle)) displayTitle = dict.nowPlaying || rawTitle;
     }
 
     const countText = `${col.items?.length || 0} ${dict.releases || 'RELEASES'}`;
@@ -828,10 +866,11 @@ async function triggerSearch() {
   const combined = Array.from(mergedMap.values());
 
   grid.innerHTML = "";
-  document.getElementById("searchStats").innerText = `${combined.length} ITEMS FOUND`;
+  const dict = DICT[currentLang] || DICT.en;
+  document.getElementById("searchStats").innerText = `${combined.length} ${dict.itemsFound || 'ITEMS FOUND'}`;
 
   if (combined.length === 0) {
-    grid.innerHTML = '<div style="grid-column: 1/-1; padding: 40px 0; color: var(--text-muted); font-family: var(--font-mono);">[ NO ITEMS FOUND IN TMDB ]</div>';
+    grid.innerHTML = `<div style="grid-column: 1/-1; padding: 40px 0; color: var(--text-muted); font-family: var(--font-mono);">${dict.noItemsFound || '[ NO ITEMS FOUND IN TMDB ]'}</div>`;
     return;
   }
 
@@ -1250,6 +1289,30 @@ function switchProvider(prov) {
   renderProviderControls();
 }
 
+async function reloadCurrentPlayerServers() {
+  const btn = document.getElementById("btnReloadServers");
+  const lbl = document.getElementById("lblReloadServers");
+  const dict = DICT[currentLang] || DICT.en;
+
+  if (btn) {
+    btn.classList.add("rotating");
+    if (lbl) lbl.innerText = dict.reloading || "[ RELOADING... ]";
+  }
+
+  if (currentItem && currentItem.id) {
+    // 1. Оновлюємо метадані фільму з TMDB
+    await loadMovieDetails(currentItem.id, currentItem.type || 'movie');
+
+    // 2. Примусово оновлюємо плеєр
+    await renderProviderControls(true);
+  }
+
+  setTimeout(() => {
+    if (btn) btn.classList.remove("rotating");
+    if (lbl) lbl.innerText = dict.reloadServices || "[ RELOAD SERVICES ]";
+  }, 700);
+}
+
 async function renderProviderControls(reloadIframe = true) {
   const dict = DICT[currentLang] || DICT.en;
   const primaryList = document.getElementById("primarySelectorList");
@@ -1284,7 +1347,7 @@ async function renderProviderControls(reloadIframe = true) {
     if (!players || players.length === 0) {
       const collapsUrl = kpId 
         ? `https://api.delivembed.cc/embed/kp/${kpId}` 
-        : `https://api.delivembed.cc/embed/tmdb/${tmdbId}`;
+        : (isTv ? `https://vidsrc.cc/v2/embed/tv/${tmdbId}/1/1` : `https://vidsrc.cc/v2/embed/movie/${tmdbId}`);
 
       players = [
         { type: "Collaps", iframeUrl: collapsUrl },

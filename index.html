@@ -23,7 +23,7 @@
       <div class="nav-left">
         <a href="#" class="logo" onclick="event.preventDefault(); navigateHome();">
           <span class="logo-box">FASTFILM</span>
-          <span>// 2.6</span>
+          <span>// 2.7</span>
         </a>
         <button id="btnBackToHome" class="btn-back" onclick="navigateHome()">[ ← BACK TO CATALOG ]</button>
       </div>
@@ -115,8 +115,13 @@
 
         <!-- PROVIDER SELECTOR TABS -->
         <div class="provider-select-bar">
-          <button id="tabVidSrc" class="prov-tab-btn active" onclick="switchProvider('vidsrc')">[ 01. VIDSRC ]</button>
-          <button id="tabKinobox" class="prov-tab-btn" onclick="switchProvider('kinobox')">[ 02. KINOBOX ]</button>
+          <div class="prov-tabs-left">
+            <button id="tabVidSrc" class="prov-tab-btn active" onclick="switchProvider('vidsrc')">[ 01. VIDSRC ]</button>
+            <button id="tabKinobox" class="prov-tab-btn" onclick="switchProvider('kinobox')">[ 02. KINOBOX ]</button>
+          </div>
+          <button id="btnReloadServers" class="btn-reload-servers" onclick="reloadCurrentPlayerServers()" title="Refresh & Reload streaming players">
+            <span id="lblReloadServers">[ RELOAD SERVICES ]</span>
+          </button>
         </div>
 
         <!-- CONTROLS PANEL -->
