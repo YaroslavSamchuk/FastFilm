@@ -18,7 +18,7 @@ const VIDSRC_SERVERS = [
   { name: "Vidplay", url: "https://vidsrc.to/embed" },
   { name: "Flixify", url: "https://vidflix.club" },
   { name: "Yoru", url: "https://video.moviepire.co/embed" },
-  { name: "4K", url: "https://player.videasy.net" },
+  { name: "EmbedSu (Fast)", url: "https://embed.su/embed" },
   { name: "Nest", url: "https://vidnest.fun" },
   { name: "Mist", url: "https://play.xpass.top/e" },
   { name: "Peach", url: "https://peachify.top/embed" },
@@ -37,7 +37,7 @@ const VIDSRC_SERVERS = [
   { name: "Prime", url: "https://player.vidrush.net/embed" },
   { name: "Hindi", url: "https://vidsrc.wtf/api/1" },
   { name: "Vidsrc", url: "https://vidsrc.me/embed" },
-  { name: "2embed", url: "https://www.2embed.cc/embed" },
+  { name: "VidSrcPro", url: "https://vidsrc.pro/embed" },
   { name: "PrimeWire", url: "https://primesrc.me/embed" },
   { name: "French", url: "https://frembed.asia/api" },
   { name: "Club", url: "https://moviesapi.to" },
@@ -1131,6 +1131,13 @@ async function resolveKinopoiskId(tmdbId, title, year = null) {
    DEDICATED WATCH PAGE FUNCTIONS (PURE CLIENT-SIDE)
    ========================================================================= */
 async function openWatchPage(item, updateHash = true) {
+  currentItem = item;
+
+  // 1. Миттєво отримуємо Kinopoisk ID / IMDb ID перед відкриттям плеєра
+  if (!item.kp_id) {
+    await resolveKinopoiskId(item.id, item.title_en || item.title, item.year);
+  }
+
   if (!item.id && item.title) {
     try {
       const rTmdb = await fetch(`https://moviepire.co/search?q=${encodeURIComponent(item.title_en || item.title)}`);
@@ -1148,13 +1155,7 @@ async function openWatchPage(item, updateHash = true) {
     } catch(e) {}
   }
 
-  currentItem = item;
-  renderWatchPage(item, updateHash);
-
-  // Одразу запускаємо фоновий пошук Kinopoisk ID для трендових та інших тайтлів
-  if (!currentItem.kp_id) {
-    resolveKinopoiskId(currentItem.id, currentItem.title_en || currentItem.title, currentItem.year);
-  }
+  renderWatchPage(currentItem || item, updateHash);
 }
 
 function openWatchPageFromParams(params) {
@@ -1219,15 +1220,13 @@ function renderWatchPage(item, updateHash = true) {
   document.getElementById("primarySelectorList").innerHTML = '<span class="spinner"></span> LOADING...';
   document.getElementById("subtitlesList").innerHTML = '—';
 
-  // Відновлення вибраного провайдера та плеєра з історії або параметрів
+  // Відновлення вибраного провайдера та плеєра з історії, або СПОЧАТКУ ЗАВЖДИ VIDSRC
   if (item.last_provider) {
     activeProvider = item.last_provider;
     selectedBalancerIndex = (item.last_balancer_index !== undefined && item.last_balancer_index !== null) ? Number(item.last_balancer_index) : 0;
-  } else if (item.provider === 'kinobox' || item.provider === 'vidsrc') {
-    activeProvider = item.provider;
-    selectedBalancerIndex = (item.last_balancer_index !== undefined && item.last_balancer_index !== null) ? Number(item.last_balancer_index) : 0;
   } else {
-    activeProvider = (currentLang === 'uk') ? 'kinobox' : 'vidsrc';
+    // Спочатку для нових відкриттів завжди відкривається VidSrc
+    activeProvider = 'vidsrc';
     selectedBalancerIndex = 0;
   }
 

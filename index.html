@@ -12,6 +12,13 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="styles.css">
+  <script>
+    // Захист консолі від скриптів блокування disable-devtool
+    try {
+      const _noop = function() {};
+      Object.defineProperty(console, 'clear', { value: _noop, writable: false, configurable: false });
+    } catch(e) {}
+  </script>
   <script src="locales.js" defer></script>
   <script src="app.js" defer></script>
 </head>
@@ -23,7 +30,7 @@
       <div class="nav-left">
         <a href="#" class="logo" onclick="event.preventDefault(); navigateHome();">
           <span class="logo-box">FASTFILM</span>
-          <span>// 3.2</span>
+          <span>// 3.3</span>
         </a>
         <button id="btnBackToHome" class="btn-back" onclick="navigateHome()">[ ← BACK TO CATALOG ]</button>
       </div>
