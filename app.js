@@ -1038,32 +1038,78 @@ function createCard(item) {
   return card;
 }
 
-async function resolveKinopoiskId(title, year = null) {
-  if (!title || title === "Movie" || !currentItem) return null;
-  if (currentItem.kp_id) return currentItem.kp_id;
+async function resolveKinopoiskId(tmdbId, title, year = null) {
+  if (!currentItem) return null;
+  if (currentItem.kp_id && currentItem.imdb_id) return currentItem.kp_id;
 
-  try {
-    const res = await fetchKinobox('search', { query: title });
-    const items = res?.data?.items || res?.items || res?.data || (Array.isArray(res) ? res : []);
-    if (Array.isArray(items) && items.length > 0) {
-      let matched = items[0];
-      if (year) {
-        const exactYear = items.find(it => String(it.year) === String(year));
-        if (exactYear) matched = exactYear;
+  const targetTmdb = tmdbId || currentItem.id;
+  const targetTitle = title || currentItem.title_en || currentItem.title;
+  const token = "48ac5259825fb8f20103dac69a9029";
+
+  let foundKp = currentItem.kp_id || null;
+  let foundImdb = currentItem.imdb_id || null;
+
+  // 1. Миттєвий пошук за TMDB ID через Alloha API (20мс)
+  if (!foundKp && targetTmdb && targetTmdb !== "969681") {
+    try {
+      const res = await fetch(`https://api.alloha.tv/?token=${token}&tmdb=${targetTmdb}`);
+      if (res.ok) {
+        const json = await res.json();
+        if (json?.status === "success" && json?.data) {
+          if (json.data.id_kp) foundKp = String(json.data.id_kp);
+          if (json.data.id_imdb) foundImdb = String(json.data.id_imdb);
+        }
       }
-      const kpId = matched.id || matched.kinopoisk_id || matched.kinopoiskId;
-      if (kpId && currentItem) {
-        currentItem.kp_id = String(kpId);
-        addToWatchHistory(currentItem);
-        const isTv = (currentItem.type === 'tv' || currentItem.type === 'series');
-        const queryParams = new URLSearchParams({ id: currentItem.id || '969681', kp: currentItem.kp_id });
-        if (isTv) queryParams.set("type", "series");
-        window.location.hash = `watch?${queryParams.toString()}`;
-        renderProviderControls(true);
-        return currentItem.kp_id;
+    } catch(e) {}
+  }
+
+  // 2. Пошук за Назвою через Alloha API (якщо за TMDB ID не знайдено)
+  if (!foundKp && targetTitle && targetTitle !== "Movie") {
+    try {
+      const q = encodeURIComponent(targetTitle);
+      const res = await fetch(`https://api.alloha.tv/?token=${token}&name=${q}`);
+      if (res.ok) {
+        const json = await res.json();
+        if (json?.status === "success" && json?.data) {
+          if (json.data.id_kp) foundKp = String(json.data.id_kp);
+          if (json.data.id_imdb) foundImdb = String(json.data.id_imdb);
+        }
       }
-    }
-  } catch (e) {}
+    } catch(e) {}
+  }
+
+  // 3. Запасний пошук через Kinobox
+  if (!foundKp && targetTitle && targetTitle !== "Movie") {
+    try {
+      const res = await fetchKinobox('search', { query: targetTitle });
+      const items = res?.data?.items || res?.items || res?.data || (Array.isArray(res) ? res : []);
+      if (Array.isArray(items) && items.length > 0) {
+        let matched = items[0];
+        if (year) {
+          const exactYear = items.find(it => String(it.year) === String(year));
+          if (exactYear) matched = exactYear;
+        }
+        const kp = matched.id || matched.kinopoisk_id || matched.kinopoiskId;
+        if (kp) foundKp = String(kp);
+      }
+    } catch(e) {}
+  }
+
+  if (foundKp || foundImdb) {
+    if (foundKp) currentItem.kp_id = foundKp;
+    if (foundImdb) currentItem.imdb_id = foundImdb;
+    addToWatchHistory(currentItem);
+
+    const isTv = (currentItem.type === 'tv' || currentItem.type === 'series');
+    const queryParams = new URLSearchParams({ id: currentItem.id || '969681' });
+    if (currentItem.kp_id) queryParams.set("kp", currentItem.kp_id);
+    if (isTv) queryParams.set("type", "series");
+    window.location.hash = `watch?${queryParams.toString()}`;
+
+    renderProviderControls(true);
+    return currentItem.kp_id;
+  }
+
   return null;
 }
 
@@ -1092,8 +1138,8 @@ async function openWatchPage(item, updateHash = true) {
   renderWatchPage(item, updateHash);
 
   // Одразу запускаємо фоновий пошук Kinopoisk ID для трендових та інших тайтлів
-  if (!currentItem.kp_id && (currentItem.title || currentItem.title_en)) {
-    resolveKinopoiskId(currentItem.title_en || currentItem.title, currentItem.year);
+  if (!currentItem.kp_id) {
+    resolveKinopoiskId(currentItem.id, currentItem.title_en || currentItem.title, currentItem.year);
   }
 }
 
@@ -1301,7 +1347,7 @@ async function loadMovieDetails(id, type) {
       updateWatchSidebarTitles();
       addToWatchHistory(currentItem);
       if (!currentItem.kp_id) {
-        resolveKinopoiskId(currentItem.title_en || currentItem.title, currentItem.year);
+        resolveKinopoiskId(currentItem.id, currentItem.title_en || currentItem.title, currentItem.year);
       }
     }
   } else {
@@ -1472,27 +1518,19 @@ async function renderProviderControls(reloadIframe = true) {
 
     const tmdbId = currentItem.id || '969681';
     let kpId = currentItem.kp_id || '';
+    const imdbId = currentItem.imdb_id || '';
     const isTv = (currentItem.type === 'tv' || currentItem.type === 'series');
 
-    // Автоматично шукаємо точний Kinopoisk ID, якщо його ще немає
-    if (!kpId && currentItem && (currentItem.title || currentItem.title_en)) {
-      fetchKinobox('search', { query: currentItem.title_en || currentItem.title })
-        .then(res => {
-          const items = res?.data?.items || res?.items || [];
-          if (items.length > 0 && items[0].id) {
-            currentItem.kp_id = String(items[0].id);
-            addToWatchHistory(currentItem);
-            renderProviderControls(true);
-          }
-        })
-        .catch(() => {});
+    // Автоматично шукаємо точний Kinopoisk ID / IMDb ID через мульті-резолвер
+    if (!kpId && !imdbId && currentItem && (currentItem.id || currentItem.title || currentItem.title_en)) {
+      resolveKinopoiskId(currentItem.id, currentItem.title_en || currentItem.title, currentItem.year);
     }
 
     let players = [];
 
     // 1. Спроба отримати динамічний список плеєрів через Edge Function
     try {
-      const q = new URLSearchParams({ kinopoisk: kpId, tmdb: tmdbId, title: currentItem.title_en || currentItem.title || '', type: currentItem.type || 'movie' }).toString();
+      const q = new URLSearchParams({ kinopoisk: kpId, imdb: imdbId, tmdb: tmdbId, title: currentItem.title_en || currentItem.title || '', type: currentItem.type || 'movie' }).toString();
       const r = await fetch(`/api/players?${q}`);
       if (r.ok) {
         const json = await r.json();
@@ -1502,18 +1540,20 @@ async function renderProviderControls(reloadIframe = true) {
       }
     } catch(e) {}
 
-    // 2. Якщо динамічний список порожній — формуємо повний перелік плеєрів Kinobox
+    // 2. Якщо динамічний список порожній — формуємо чистий перелік швидких плеєрів без сторонніх блокувальників
     if (!players || players.length === 0) {
       const collapsUrl = kpId 
         ? `https://api.ortified.ws/embed/kp/${kpId}` 
-        : (isTv ? `https://vidsrc.to/embed/tv/${tmdbId}/1/1` : `https://vidsrc.to/embed/movie/${tmdbId}`);
+        : (imdbId 
+            ? `https://api.ortified.ws/embed/imdb/${imdbId}`
+            : (isTv ? `https://vidsrc.to/embed/tv/${tmdbId}/1/1` : `https://vidsrc.to/embed/movie/${tmdbId}`));
 
       players = [
-        { type: "Turbo", iframeUrl: isTv ? `https://player.videasy.net/tv/${tmdbId}/1/1` : `https://player.videasy.net/movie/${tmdbId}` },
+        { type: "Turbo", iframeUrl: isTv ? `https://vidlink.pro/tv/${tmdbId}/1/1` : `https://vidlink.pro/movie/${tmdbId}` },
         { type: "Collaps", iframeUrl: collapsUrl },
+        { type: "AutoEmbed", iframeUrl: isTv ? `https://player.autoembed.cc/embed/tv/${tmdbId}/1/1` : `https://player.autoembed.cc/embed/movie/${tmdbId}` },
         { type: "Veoveo", iframeUrl: isTv ? `https://vixsrc.to/tv/${tmdbId}/1/1` : `https://vixsrc.to/movie/${tmdbId}` },
-        { type: "Gencit", iframeUrl: isTv ? `https://vidsrc.to/embed/tv/${tmdbId}/1/1` : `https://vidsrc.to/embed/movie/${tmdbId}` },
-        { type: "Videoseed", iframeUrl: isTv ? `https://www.2embed.cc/embedtv/${tmdbId}&s=1&e=1` : `https://www.2embed.cc/embed/${tmdbId}` },
+        { type: "EmbedSu", iframeUrl: isTv ? `https://embed.su/embed/tv/${tmdbId}/1/1` : `https://embed.su/embed/movie/${tmdbId}` },
         { type: "Alloha", iframeUrl: isTv ? `https://multiembed.mov/?video_id=${tmdbId}&tmdb=1&s=1&e=1` : `https://multiembed.mov/?video_id=${tmdbId}&tmdb=1` }
       ];
     }

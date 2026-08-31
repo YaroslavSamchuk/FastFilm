@@ -33,17 +33,21 @@ export async function onRequest(context) {
     }
   } catch (err) {}
 
+  const imdbId = url.searchParams.get("imdb") || "";
+
   // 2. Безпомилковий резервний список на базі офіційного дзеркала api.ortified.ws
   const collapsUrl = kpId 
     ? `https://api.ortified.ws/embed/kp/${kpId}` 
-    : (isTv ? `https://vidsrc.to/embed/tv/${tmdbId}/1/1` : `https://vidsrc.to/embed/movie/${tmdbId}`);
+    : (imdbId 
+        ? `https://api.ortified.ws/embed/imdb/${imdbId}` 
+        : (isTv ? `https://vidsrc.to/embed/tv/${tmdbId}/1/1` : `https://vidsrc.to/embed/movie/${tmdbId}`));
 
   const players = [
-    { type: "Turbo", iframeUrl: isTv ? `https://player.videasy.net/tv/${tmdbId}/1/1` : `https://player.videasy.net/movie/${tmdbId}` },
+    { type: "Turbo", iframeUrl: isTv ? `https://vidlink.pro/tv/${tmdbId}/1/1` : `https://vidlink.pro/movie/${tmdbId}` },
     { type: "Collaps", iframeUrl: collapsUrl },
+    { type: "AutoEmbed", iframeUrl: isTv ? `https://player.autoembed.cc/embed/tv/${tmdbId}/1/1` : `https://player.autoembed.cc/embed/movie/${tmdbId}` },
     { type: "Veoveo", iframeUrl: isTv ? `https://vixsrc.to/tv/${tmdbId}/1/1` : `https://vixsrc.to/movie/${tmdbId}` },
-    { type: "Gencit", iframeUrl: isTv ? `https://vidsrc.to/embed/tv/${tmdbId}/1/1` : `https://vidsrc.to/embed/movie/${tmdbId}` },
-    { type: "Videoseed", iframeUrl: isTv ? `https://www.2embed.cc/embedtv/${tmdbId}&s=1&e=1` : `https://www.2embed.cc/embed/${tmdbId}` },
+    { type: "EmbedSu", iframeUrl: isTv ? `https://embed.su/embed/tv/${tmdbId}/1/1` : `https://embed.su/embed/movie/${tmdbId}` },
     { type: "Alloha", iframeUrl: isTv ? `https://multiembed.mov/?video_id=${tmdbId}&tmdb=1&s=1&e=1` : `https://multiembed.mov/?video_id=${tmdbId}&tmdb=1` }
   ];
 
