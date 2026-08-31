@@ -43,8 +43,8 @@ export async function onRequest(context) {
         : (isTv ? `https://vidsrc.to/embed/tv/${tmdbId}/1/1` : `https://vidsrc.to/embed/movie/${tmdbId}`));
 
   const players = [
-    { type: "Turbo", iframeUrl: isTv ? `https://vidlink.pro/tv/${tmdbId}/1/1` : `https://vidlink.pro/movie/${tmdbId}` },
     { type: "Collaps", iframeUrl: collapsUrl },
+    { type: "Turbo", iframeUrl: isTv ? `https://vidlink.pro/tv/${tmdbId}/1/1` : `https://vidlink.pro/movie/${tmdbId}` },
     { type: "AutoEmbed", iframeUrl: isTv ? `https://player.autoembed.cc/embed/tv/${tmdbId}/1/1` : `https://player.autoembed.cc/embed/movie/${tmdbId}` },
     { type: "Veoveo", iframeUrl: isTv ? `https://vixsrc.to/tv/${tmdbId}/1/1` : `https://vixsrc.to/movie/${tmdbId}` },
     { type: "EmbedSu", iframeUrl: isTv ? `https://embed.su/embed/tv/${tmdbId}/1/1` : `https://embed.su/embed/movie/${tmdbId}` },

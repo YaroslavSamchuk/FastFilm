@@ -469,6 +469,16 @@ function handleRoute() {
   if (hash.startsWith("#watch")) {
     const queryStr = hash.replace("#watch?", "");
     const params = new URLSearchParams(queryStr);
+    const id = params.get("id");
+    const kp = params.get("kp");
+
+    // Якщо цей тайтл вже відкритий — просто зберігаємо kp_id і не перезатираємо
+    if (currentItem && id && String(currentItem.id) === String(id)) {
+      if (kp && !currentItem.kp_id) {
+        currentItem.kp_id = kp;
+      }
+      return;
+    }
     openWatchPageFromParams(params);
   } else {
     navigateHome(false);
@@ -1104,7 +1114,11 @@ async function resolveKinopoiskId(tmdbId, title, year = null) {
     const queryParams = new URLSearchParams({ id: currentItem.id || '969681' });
     if (currentItem.kp_id) queryParams.set("kp", currentItem.kp_id);
     if (isTv) queryParams.set("type", "series");
-    window.location.hash = `watch?${queryParams.toString()}`;
+    
+    // Оновлюємо посилання без перезавантаження сторінки
+    if (window.location.hash !== `#watch?${queryParams.toString()}`) {
+      history.replaceState(null, "", `#watch?${queryParams.toString()}`);
+    }
 
     renderProviderControls(true);
     return currentItem.kp_id;
@@ -1549,8 +1563,8 @@ async function renderProviderControls(reloadIframe = true) {
             : (isTv ? `https://vidsrc.to/embed/tv/${tmdbId}/1/1` : `https://vidsrc.to/embed/movie/${tmdbId}`));
 
       players = [
-        { type: "Turbo", iframeUrl: isTv ? `https://vidlink.pro/tv/${tmdbId}/1/1` : `https://vidlink.pro/movie/${tmdbId}` },
         { type: "Collaps", iframeUrl: collapsUrl },
+        { type: "Turbo", iframeUrl: isTv ? `https://vidlink.pro/tv/${tmdbId}/1/1` : `https://vidlink.pro/movie/${tmdbId}` },
         { type: "AutoEmbed", iframeUrl: isTv ? `https://player.autoembed.cc/embed/tv/${tmdbId}/1/1` : `https://player.autoembed.cc/embed/movie/${tmdbId}` },
         { type: "Veoveo", iframeUrl: isTv ? `https://vixsrc.to/tv/${tmdbId}/1/1` : `https://vixsrc.to/movie/${tmdbId}` },
         { type: "EmbedSu", iframeUrl: isTv ? `https://embed.su/embed/tv/${tmdbId}/1/1` : `https://embed.su/embed/movie/${tmdbId}` },
