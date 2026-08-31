@@ -645,6 +645,11 @@ function changeLanguage(lang) {
   if (browseData) renderCollections(browseData);
   if (currentItem) {
     updateWatchSidebarTitles();
+    const isTv = String(currentItem.type || '').toLowerCase().includes('tv') || String(currentItem.type || '').toLowerCase().includes('series');
+    const watchTypeEl = document.getElementById("watchType");
+    if (watchTypeEl) watchTypeEl.innerText = isTv ? (dict.lblSeries || 'SERIES') : (dict.lblMovie || 'MOVIE');
+    const watchRatingEl = document.getElementById("watchRating");
+    if (watchRatingEl) watchRatingEl.innerText = formatSidebarRating(currentItem);
     renderProviderControls(false);
   }
 }
@@ -802,9 +807,9 @@ async function triggerSearch() {
   // Перевірка на кирилицю / не-латинські символи
   const isNonAscii = /[^\x00-\x7F]/.test(cleanQ);
 
-  // 1. Асинхронний пошук напряму в TMDB за оригінальним текстом (тільки для ASCII/латиниці)
+  // 1. Асинхронний пошук напряму в TMDB за оригінальним текстом (якщо є латинські символи/ASCII)
   const sanitizedAscii = sanitizeForMoviePire(cleanQ);
-  if (!isNonAscii && sanitizedAscii) {
+  if (sanitizedAscii) {
     promises.push(
       fetch(`https://moviepire.co/search?q=${encodeURIComponent(sanitizedAscii)}`)
         .then(r => r.ok ? r.json() : null)
@@ -814,7 +819,6 @@ async function triggerSearch() {
           if (Array.isArray(items)) {
             items.forEach(it => {
               const posterUrl = it.poster || it.image || (it.poster_path ? `https://image.tmdb.org/t/p/w500${it.poster_path}` : '');
-              if (posterUrl && (posterUrl.includes('yandex') || posterUrl.includes('kinopoisk'))) return;
               rawList.push({
                 id: it.id,
                 kp_id: null,
@@ -834,13 +838,87 @@ async function triggerSearch() {
     );
   }
 
-  // 2. Якщо введено не-латиницею — паралельно перекладаємо на англійську та шукаємо в TMDB
+  // 2. Потужний пошук через Alloha API (підтримує українські та російські назви з точним TMDB ID)
+  const allohaToken = "48ac5259825fb8f20103dac69a9029";
+  const searchVariants = [cleanQ];
+  if (isNonAscii) {
+    const ruNorm = cleanQ.toLowerCase()
+      .replace(/і/g, 'и').replace(/ї/g, 'и').replace(/є/g, 'е').replace(/ґ/g, 'г')
+      .replace(/е/g, 'э');
+    if (ruNorm !== cleanQ.toLowerCase()) searchVariants.push(ruNorm);
+  }
+
+  searchVariants.forEach(variant => {
+    promises.push(
+      fetch(`https://api.alloha.tv/?token=${allohaToken}&list=1&name=${encodeURIComponent(variant)}`)
+        .then(r => r.ok ? r.json() : null)
+        .then(async json => {
+          const items = json?.data || [];
+          if (Array.isArray(items) && items.length > 0) {
+            items.forEach(it => {
+              const tmdbId = it.id_tmdb || null;
+              const kpId = it.id_kp ? String(it.id_kp) : null;
+              const posterUrl = it.poster || '';
+              rawList.push({
+                id: tmdbId || (kpId ? `kp_${kpId}` : `alloha_${it.token_movie}`),
+                kp_id: kpId,
+                title: it.name || it.original_name || 'Movie',
+                title_en: it.original_name || it.name || 'Movie',
+                poster: posterUrl,
+                rating: it.rating_kp || it.rating_imdb || 8.0,
+                rating_kp: it.rating_kp,
+                rating_tmdb: it.rating_imdb,
+                year: it.year ? String(it.year) : '',
+                type: (it.category === 2 || it.category === 4 || it.seasons_count) ? 'series' : 'movie',
+                provider: 'both'
+              });
+            });
+
+            // Для знайдених оригінальних назв — підтягуємо розширені постери TMDB
+            const origNames = items.slice(0, 3).map(it => it.original_name).filter(Boolean);
+            for (const orig of origNames) {
+              const san = sanitizeForMoviePire(orig);
+              if (san) {
+                try {
+                  const r = await fetch(`https://moviepire.co/search?q=${encodeURIComponent(san)}`);
+                  if (r.ok) {
+                    const tmdbJson = await r.json();
+                    const tmdbItems = tmdbJson.data || tmdbJson.results || tmdbJson || [];
+                    if (Array.isArray(tmdbItems)) {
+                      tmdbItems.slice(0, 5).forEach(it => {
+                        rawList.push({
+                          id: it.id,
+                          kp_id: null,
+                          title: it.title || it.name || orig,
+                          title_en: it.title || it.name || orig,
+                          poster: it.poster || it.image || '',
+                          rating: it.vote_average || it.rating,
+                          rating_tmdb: it.vote_average || it.rating,
+                          year: it.year || '',
+                          type: it.type || 'movie',
+                          provider: 'both'
+                        });
+                      });
+                    }
+                  }
+                } catch(e) {}
+              }
+            }
+          }
+        })
+        .catch(() => {})
+    );
+  });
+
+  // 3. Якщо введено не-латиницею — паралельний авто-переклад на англійську через MyMemory uk|en
   if (isNonAscii) {
     promises.push(
-      translateWithMyMemory(cleanQ, 'en')
-        .then(async trRes => {
-          if (trRes && typeof trRes === 'string' && trRes.trim() && trRes.toLowerCase() !== cleanQ.toLowerCase()) {
-            const sanitizedTr = sanitizeForMoviePire(trRes);
+      fetch(`https://api.mymemory.translated.net/get?q=${encodeURIComponent(cleanQ)}&langpair=uk|en`)
+        .then(r => r.ok ? r.json() : null)
+        .then(async data => {
+          const tr = data?.responseData?.translatedText;
+          if (tr && typeof tr === 'string' && !tr.includes("MYMEMORY WARNING") && tr.trim().toLowerCase() !== cleanQ.toLowerCase()) {
+            const sanitizedTr = sanitizeForMoviePire(tr.replace(/[\-_/\\:.]+/g, " "));
             if (sanitizedTr) {
               const r = await fetch(`https://moviepire.co/search?q=${encodeURIComponent(sanitizedTr)}`);
               if (r.ok) {
@@ -848,17 +926,15 @@ async function triggerSearch() {
                 const items = json.data || json.results || json || [];
                 if (Array.isArray(items)) {
                   items.forEach(it => {
-                    const posterUrl = it.poster || it.image || (it.poster_path ? `https://image.tmdb.org/t/p/w500${it.poster_path}` : '');
-                    if (posterUrl && (posterUrl.includes('yandex') || posterUrl.includes('kinopoisk'))) return;
                     rawList.push({
                       id: it.id,
                       kp_id: null,
                       title: it.title || it.name || 'Movie',
                       title_en: it.title || it.name || 'Movie',
-                      poster: posterUrl,
+                      poster: it.poster || it.image || '',
                       rating: it.vote_average || it.rating,
                       rating_tmdb: it.vote_average || it.rating,
-                      year: it.year || (it.release_date ? it.release_date.slice(0, 4) : ''),
+                      year: it.year || '',
                       type: it.type || 'movie',
                       provider: 'both'
                     });
@@ -871,53 +947,6 @@ async function triggerSearch() {
         .catch(() => {})
     );
   }
-
-  // 3. Паралельний пошук локалізованих назв із авто-конвертацією в чистий TMDB
-  promises.push(
-    fetchKinobox('search', { query: cleanQ })
-      .then(async json => {
-        const items = json?.data?.items || json?.items || json?.data || (Array.isArray(json) ? json : []);
-        if (Array.isArray(items) && items.length > 0) {
-          const tmdbPromises = items.slice(0, 5).map(async it => {
-            let targetTitle = '';
-            if (typeof it.title === 'string') targetTitle = it.title;
-            else if (typeof it.title === 'object' && it.title) {
-              targetTitle = it.title.original || it.title.english || it.title.russian || it.title.name || '';
-            } else if (typeof it.name === 'string') {
-              targetTitle = it.name;
-            }
-            const sanitizedTarget = sanitizeForMoviePire(targetTitle);
-            if (!sanitizedTarget) return;
-            try {
-              const r = await fetch(`https://moviepire.co/search?q=${encodeURIComponent(sanitizedTarget)}`);
-              if (r.ok) {
-                const resJson = await r.json();
-                const tmdbItems = resJson.data || resJson.results || resJson || [];
-                if (Array.isArray(tmdbItems) && tmdbItems.length > 0) {
-                  const matched = tmdbItems[0];
-                  const posterUrl = matched.poster || matched.image || (matched.poster_path ? `https://image.tmdb.org/t/p/w500${matched.poster_path}` : '');
-                  if (posterUrl && (posterUrl.includes('yandex') || posterUrl.includes('kinopoisk'))) return;
-                  rawList.push({
-                    id: matched.id,
-                    kp_id: it.id || it.kinopoisk_id || null,
-                    title: matched.title || matched.name || targetTitle,
-                    title_en: matched.title || matched.name || targetTitle,
-                    poster: posterUrl,
-                    rating: matched.vote_average || matched.rating,
-                    rating_tmdb: matched.vote_average || matched.rating,
-                    year: matched.year || it.year || '',
-                    type: matched.type || (it.type === 'Series' ? 'series' : 'movie'),
-                    provider: 'both'
-                  });
-                }
-              }
-            } catch(e) {}
-          });
-          await Promise.allSettled(tmdbPromises);
-        }
-      })
-      .catch(() => {})
-  );
 
   // Чекаємо завершення всіх асинхронних потоків (швидко і без затримок)
   await Promise.allSettled(promises);
@@ -1014,8 +1043,8 @@ function createCard(item) {
   };
 
   const dict = DICT[currentLang] || DICT.en;
-  const isTv = (item.type === 'tv' || item.type === 'series');
-  const typeLabel = isTv ? dict.lblSeries : dict.lblMovie;
+  const isTv = String(item.type || '').toLowerCase().includes('tv') || String(item.type || '').toLowerCase().includes('series');
+  const typeLabel = isTv ? (dict.lblSeries || 'SERIES') : (dict.lblMovie || 'MOVIE');
 
   let posterSrc = item.poster;
   if (!posterSrc || posterSrc.includes('unsplash') || posterSrc.includes('yandex') || posterSrc.includes('kinopoisk')) {
