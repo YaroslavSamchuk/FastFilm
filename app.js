@@ -1120,7 +1120,9 @@ async function resolveKinopoiskId(tmdbId, title, year = null) {
       history.replaceState(null, "", `#watch?${queryParams.toString()}`);
     }
 
-    renderProviderControls(true);
+    if (activeProvider === 'kinobox') {
+      renderProviderControls(true);
+    }
     return currentItem.kp_id;
   }
 
@@ -1132,11 +1134,6 @@ async function resolveKinopoiskId(tmdbId, title, year = null) {
    ========================================================================= */
 async function openWatchPage(item, updateHash = true) {
   currentItem = item;
-
-  // 1. Миттєво отримуємо Kinopoisk ID / IMDb ID перед відкриттям плеєра
-  if (!item.kp_id) {
-    await resolveKinopoiskId(item.id, item.title_en || item.title, item.year);
-  }
 
   if (!item.id && item.title) {
     try {
@@ -1534,9 +1531,16 @@ async function renderProviderControls(reloadIframe = true) {
     const imdbId = currentItem.imdb_id || '';
     const isTv = (currentItem.type === 'tv' || currentItem.type === 'series');
 
-    // Автоматично шукаємо точний Kinopoisk ID / IMDb ID через мульті-резолвер
-    if (!kpId && !imdbId && currentItem && (currentItem.id || currentItem.title || currentItem.title_en)) {
+    // Якщо Kinopoisk ID / IMDb ID ще немає — показуємо індикатор пошуку і запускаємо резолвер
+    if (!kpId && !imdbId) {
+      primaryList.innerHTML = `
+        <div style="display: flex; align-items: center; gap: 10px; padding: 6px 0; font-family: var(--font-mono); font-size: 11px; color: var(--text-dim);">
+          <span class="spinner"></span>
+          <span>[ RESOLVING KINOPOISK ID & COLLAPS STREAMS... ]</span>
+        </div>
+      `;
       resolveKinopoiskId(currentItem.id, currentItem.title_en || currentItem.title, currentItem.year);
+      return;
     }
 
     let players = [];
